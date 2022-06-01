@@ -1,0 +1,1078 @@
+#+title: Emacs Configuration File
+#+author: Lao Tong
+#+babel: :cache yes
+#+property: header-args :tangle yes
+
+* About
+This is my =init.el=, or more precisely, the =init.org= which generates my
+=init.el=. This file follows the conventions of the literate programming style.
+As you read this document, you will encounter commentary on source code blocks.
+The =init.el= file is generated through Org Mode's Babel feature. It "tangles"
+source code blocks by loading them onto an external file (in this case, the
+=init.el= file)
+
+Most of the code blocks in this document will have been included in the
+generated =init.el= file, but there are certain exceptions identifiable by a
+=:tangle no= or =:eval no= in the source block head.
+
+#+tl;dr: This document provides source code blocks of my =init.el= & commentary.
+
+* Initialization
+** Lexical Binding
+Enable lexical binding:
+
+#+begin_src elisp
+;;; -*- lexical-binding: t -*-
+#+end_src
+
+** Package Management
+*** Package Archives
+#+begin_src elisp
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+#+end_src
+*** =use-package= and =straight= Setup
+#+begin_src elisp
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+(straight-use-package 'use-package)
+(use-package straight
+  :config
+  (setq straight-use-package-by-default t))
+#+end_src
+
+*** Local Packages
+#+begin_src elisp
+(add-to-list 'load-path (expand-file-name "site-lisp" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+#+end_src
+
+** Libraries and Utilities
+#+begin_src elisp
+(use-package async
+  :config (dired-async-mode 1))
+(use-package multiple-cursors)
+(use-package restart-emacs
+  :bind
+  ("C-c r" . restart-emacs))
+(use-package goto-line-preview
+  :bind
+  ("M-g M-g" . goto-line-preview))
+#+end_src
+
+** Org Mode Configuration
+#+begin_src elisp
+  (use-package org
+    :straight org-contrib
+    :bind
+    (:map org-mode-map ("M-<up>" . org-shiftup)
+		       ("M-<down>" . org-shiftdown))
+    :config
+    (setq org-directory "~/org")
+    (setq org-agenda-files (expand-file-name "todo/agendas.org" org-directory))
+    (setq org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "WAITING"
+					"|" "DONE" "CANCELLED")))
+    (setq org-tag-alist '(("@work" . ?w)
+			  ("@home" . ?h)
+			  ("studygarden" . ?s)))
+    (setq org-special-ctrl-a/e t)
+    (setq org-display-custom-times t)
+    (setq org-adapt-indentation t) ; align content with headlines
+    (setq org-edit-src-content-indentation nil) ; align code blocks with markers
+    (setq org-src-tab-acts-natively t)
+    (setq org-src-preserve-indentation nil)
+    (setq org-src-fontify-natively t)
+    (setq org-log-done t)
+    (setq org-html-doctype "html5")
+    (setq org-startup-indented t)
+    (setq org-support-shift-select t)
+    (setq org-hide-leading-stars t))
+#+end_src
+
+** User and System Information
+#+begin_src elisp
+(defvar my-laptop-p (equal (system-name) "lamb"))
+(setq user-full-name "Lao Tong"
+      user-mail-address "lao.s.t@pm.me")
+#+end_src
+
+** =.emacs.d= Configuration
+*** Custom File
+#+begin_src elisp
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(load custom-file)
+#+end_src
+
+*** No Littering
+#+begin_src elisp
+(use-package no-littering)
+#+end_src
+
+*** Backup and Autosave
+#+begin_src elisp
+(setq delete-old-versions -1)
+(setq version-control t)
+(setq vc-make-backup-files t)
+(defvar emacs-autosave-directory
+  (concat user-emacs-directory "auto-save/"))
+(setq backup-directory-alist
+      `((".*" . ,emacs-autosave-directory)))
+(setq auto-save-file-name-transforms
+      `((".*" ,emacs-autosave-directory t)))
+#+end_src
+
+*** Files and Directories
+Some definitions and configuration of common directories and files:
+
+#+begin_src elisp
+(defvar config-directory (expand-file-name "~/.config"))
+(defvar lao/sway-config-file (concat config-directory "sway/config"))
+(defvar init-org-file (concat user-emacs-directory "init.org"))
+(defun open-init-org-file ()
+  "Open the =init.org= file in the emacs directory."
+  (interactive)
+  (find-file init-org-file))
+(defvar user-init-file (concat user-emacs-directory "init.el"))
+(defvar lao/minerva-theme-file (concat user-emacs-directory "etc/themes/minerva-theme.el"))
+(defun open-minerva-theme-file ()
+  "Open the =Minerva= theme file in the emacs directory."
+  (interactive)
+  (find-file lao/minerva-theme-file))
+(defvar lao/zshrc-file (expand-file-name "~/.zshrc"))
+(defun open-zshrc-file ()
+  "Open the .zshrc configuration file."
+  (interactive)
+  (find-file lao/zshrc-file))
+(defvar snippets-directory
+  (concat user-emacs-directory "snippets/"))
+(add-to-list 'custom-theme-load-path
+             (concat user-emacs-directory "etc/themes/"))
+#+end_src
+
+** Authorization and Security
+#+begin_src elisp
+(setq-default auth-sources '((:source "~/authinfo.gpg"))
+              epg-gpg-home-directory "~/.gnupg"
+              epg-gpg-program "gpg2"
+              epg-pinentry-mode 'loopback)
+#+end_src
+
+** Environment Variables
+Get environment variables from shell with =exec-path-from-shell=:
+
+#+begin_src elisp
+(use-package exec-path-from-shell
+  :defer nil
+  :commands exec-path-from-shell-initialize
+  :if (memq window-system '(mac ns))
+  :config
+  (exec-path-from-shell-initialize))
+#+end_src
+
+** Default Configurations
+#+begin_src elisp
+(setq-default global-auto-revert-non-file-buffers t)
+(setq-default kill-do-not-save-duplicates t) ; don't save duplicate entries in kill ring
+(setq-default indent-tabs-mode nil) ; don't indent tabs automatically
+(setq-default auto-revert-interval 3) ; 3 seconds to check autoreverts
+(setq-default completion-cycle-threshold 3) ; 3 completion candidates
+(setq-default completion-ignore-case t)
+(setq-default enable-recursive-minibuffers t)
+(setq-default fill-column 80)
+(setq-default frame-resize-pixelwise t) ; set pixelwise resizing
+(setq-default initial-major-mode 'org-mode) ; org mode for new buffers
+(setq-default initial-scratch-message "") ; blank scratch buffers
+(setq-default large-file-warning-threshold (* 1024 1024 1024 2)) ; warn about files >= 2GB
+(setq-default read-buffer-completion-ignore-case t)
+(setq-default read-file-name-completion-ignore-case t)
+(setq-default read-process-output-max (* 1024 1024)) ; allow reading 2MB from subprocesses
+(setq-default scroll-preserve-screen-position t)
+(setq-default sentence-end-double-space nil)
+(setq-default tab-always-indent 'complete) ; indent first, then try to complete at point
+(setq-default tab-width 4)
+(setq-default truncate-lines t) ; never play continuation lines
+(setq-default use-dialog-box nil)
+(setq-default vc-follow-symlinks t)
+(setq-default x-stretch-cursor t) ; stretch cursor to size of glyph under it
+(setq-default x-gtk-resize-child-frames t)
+(setq native-comp-async-report-warnings-errors 'silent)
+(fset 'yes-or-no-p 'y-or-n-p) ; make /yes/ or /no/ choices into /y/ or /n/
+#+end_src
+
+*** Mode Line
+#+begin_src elisp
+(setq-default column-number-mode t
+              mode-line-position-column-format '(" %l:%c")
+              mode-line-position-column-line-format '(" %l:%c"))
+#+end_src
+*** UTF-8 Encoding
+Set =utf-8= as preferred encoding:
+
+#+begin_src elisp
+(set-language-environment "UTF-8")
+(prefer-coding-system       'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+#+end_src
+
+** Initial Modes
+#+begin_src elisp
+(global-auto-revert-mode 1) ; always revert buffers when a file changes
+(global-so-long-mode 1) ; avoid performance issues with files with long names
+(display-time-mode 1) ; always show the time
+(savehist-mode) ; save point at files
+(pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
+#+end_src
+
+*** Savehist
+#+begin_src elisp
+(use-package savehist :init (savehist-mode))
+#+end_src
+
+*** Desktop Mode
+**** TODO fix 'Wrong type argument: hash-table-p, "Unprintable entity"' error
+#+begin_src elisp :tangle no
+(desktop-save-mode 1) ; persistent windows and frames upon restart
+#+end_src
+
+** Initial Hooks
+#+begin_src elisp
+(add-hook 'after-save-hook
+	    (lambda ()
+		(when (equal (buffer-file-name)
+			     (expand-file-name (concat user-emacs-directory "init.org")))
+		  (org-babel-load-file
+		   (concat user-emacs-directory "init.org"))
+		  (async-byte-compile-file (concat user-emacs-directory "init.el")))))
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+end_src
+
+* Packages
+** Built-in Packages
+*** Xref
+ #+begin_src elisp
+ (use-package xref
+   :commands (xref-show-xrefs-function xref-show-definitions-function))
+ #+end_src
+
+*** Recent Files
+#+begin_src elisp
+(use-package recentf
+  :config
+  (setq recentf-max-saved-items 300)
+  (setq recentf-max-menu-items 10)
+  :init
+  (recentf-mode))
+#+end_src
+
+*** Diminish
+ #+begin_src elisp
+ (use-package diminish)
+ #+end_src
+
+*** Whitespace
+ #+begin_src elisp
+ (use-package whitespace
+   :diminish global-whitespace-mode
+   :config
+   (setq whitespace-line-column nil)
+   (setq whitespace-style '(face indentation
+                            tabs tab-mark
+                            spaces space-mark
+                            newline
+                            trailing lines-tail))
+   (setq whitespace-display-mappings
+    '((tab-mark ?\t [?› ?\t])
+      (newline-mark ?\u2B90 [?\u23ce])
+      (space-mark ?\u3000 [?\u25a1])))
+   (setq whitespace-space-regexp "\\(\u3000+\\)")
+   :init
+   (global-whitespace-mode))
+ #+end_src
+
+*** Winner
+ #+begin_src elisp
+ (use-package winner :init (winner-mode))
+ #+end_src
+
+*** Ibuffer
+ #+begin_src elisp
+ (use-package ibuffer
+   :bind ("C-x C-b" . ibuffer))
+ #+end_src
+
+*** Dired
+ #+begin_src elisp
+ (use-package dired
+   :straight (:type built-in)
+   :bind (:map dired-mode-map
+               ("M-+" . dired-create-empty-file)))
+ (use-package dired-x :straight (:type built-in))
+ #+end_src
+
+*** Hippie Expand
+ #+begin_src elisp
+ (use-package hippie-exp
+   :bind ("M-/" . hippie-expand))
+ #+end_src
+
+*** Tramp
+ #+begin_src elisp
+ (use-package tramp
+   :custom
+   (tramp-default-method "ssh")
+   (tramp-encoding-shell "/bin/zsh")
+   (tramp-verbose 5))
+ #+end_src
+
+*** Project Management
+ #+begin_src elisp
+ (use-package project)
+ (use-package projectile)
+ #+end_src
+
+*** El Doc
+#+begin_src elisp
+(use-package eldoc
+  :commands turn-on-eldoc-mode
+  :hook ((emacs-lisp-mode . turn-on-eldoc-mode)
+         (lisp-interaction-mode . turn-on-eldoc-mode)
+         (ielm-mode . turn-on-eldoc-mode))
+  :diminish)
+#+end_src
+
+** Completions
+*** Which Key
+ #+begin_src elisp
+ (use-package which-key
+   :demand t
+   :commands which-key-mode
+   :init (which-key-mode)
+   :diminish)
+ #+end_src
+*** Dabbrev
+ #+begin_src elisp
+ (use-package dabbrev
+   :bind (("C-<tab>" . dabbrev-expand)
+          (:map minibuffer-local-map ("C-<tab>" . dabbrev-expand)))
+   :custom
+   (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
+ #+end_src
+
+*** Vertico
+ #+begin_src elisp
+ (use-package vertico
+   :straight (vertico :files (:defaults "extensions/*")
+                      :includes (vertico-indexed
+                                vertico-flat
+                                vertico-grid
+                                vertico-mouse
+                                vertico-quick
+                                vertico-buffer
+                                vertico-repeat
+                                vertico-reverse
+                                vertico-directory
+                                vertico-multiform
+                                vertico-unobtrusive
+                                ))
+   :commands vertico-mode
+   :bind
+   (:map vertico-map
+         ("?" . minibuffer-completion-help)
+         ("M-RET" . minibuffer-force-complete-and-exit)
+         ("M-TAB" . minibuffer-complete))
+   :init
+   (vertico-mode))
+ #+end_src
+
+**** Vertico Extensions
+***** Vertico Directory
+ #+begin_src elisp
+ (use-package vertico-directory
+   :straight nil
+   :after vertico
+   :bind (:map vertico-map
+               ("RET" . vertico-directory-enter)
+               ("DEL" . vertico-directory-delete-char)
+               ("M-DEL" . vertico-directory-delete-word))
+   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+ #+end_src
+
+***** Vertico Mouse
+ #+begin_src elisp
+ (use-package vertico-mouse
+   :straight nil
+   :after vertico)
+ #+end_src
+
+*** Orderless
+ #+begin_src elisp
+ (use-package orderless
+   :demand t
+   :init
+   (setq completion-styles '(substring orderless basic))
+   (setq completion-category-defaults nil)
+   (setq completion-category-overrides '((file (styles basic partial-completion))
+                                         (eglot (styles . (orderless)))))
+   :config
+   (setq orderless-component-separator "[ &]")
+   (setq completion-styles '(orderless)
+           completion-category-overrides '((file (styles basic partial-completion)))))
+ #+end_src
+
+*** Marginalia
+ #+begin_src elisp
+ (use-package marginalia
+   :commands marginalia-mode
+   :bind (("M-A" . marginalia-cycle)
+          :map minibuffer-local-map
+          ("M-A" . marginalia-cycle))
+   :init
+   (marginalia-mode))
+ #+end_src
+
+*** Corfu
+ #+begin_src elisp
+ (use-package corfu
+   :demand t
+   :commands (corfu-mode
+              global-corfu-mode
+              corfu-enable-in-minibuffer
+              corfu-enable-always-in-minibuffer)
+   :config
+   (defun corfu-enable-in-minibuffer ()
+     "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+     (when (where-is-internal #'completion-at-point (list (current-local-map)))
+       ;; (setq-local corfu-auto nil) Enable/disable auto completion
+       (corfu-mode 1)))
+   (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+   (defun corfu-enable-always-in-minibuffer ()
+     "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+     (unless (or (bound-and-true-p mct--active)
+                 (bound-and-true-p vertico--input))
+       (corfu-mode 1)))
+   (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+   :custom
+   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+   (corfu-auto t)                 ;; Enable auto completion
+   (corfu-preselect-first nil)
+   (corfu-separator ?\s)          ;; Orderless field separator
+   :bind
+   ;; Configure SPC for separator insertion
+   (:map corfu-map
+         ("SPC" . corfu-insert-separator)
+         ("M-n" . corfu-next)
+         ("M-p" . corfu-previous))
+   :init
+   (global-corfu-mode))
+ #+end_src
+
+*** Cape
+ #+begin_src elisp
+ (use-package cape
+   :demand t
+   ;; Bind dedicated completion commands
+   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+   :bind (("M-p p" . completion-at-point) ;; capf
+          ("M-p t" . complete-tag)        ;; etags
+          ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
+          ("M-p h" . cape-history)
+          ("M-p f" . cape-file)
+          ("M-p k" . cape-keyword)
+          ("M-p s" . cape-symbol)
+          ("M-p a" . cape-abbrev)
+          ("M-p i" . cape-ispell)
+          ("M-p l" . cape-line)
+          ;;("M-p w" . cape-dict)
+          ("M-p \\" . cape-tex)
+          ("M-p _" . cape-tex)
+          ("M-p ^" . cape-tex)
+          ("M-p &" . cape-sgml)
+          ;;("M-p r" . cape-rfc1345)
+          )
+   :init
+   ;; Add `completion-at-point-functions', used by `completion-at-point'.
+   (add-to-list 'completion-at-point-functions #'cape-file)
+   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+   (add-to-list 'completion-at-point-functions #'cape-history)
+   (add-to-list 'completion-at-point-functions #'cape-keyword)
+   (add-to-list 'completion-at-point-functions #'cape-tex)
+   (add-to-list 'completion-at-point-functions #'cape-sgml)
+   ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+   (add-to-list 'completion-at-point-functions #'cape-abbrev)
+   (add-to-list 'completion-at-point-functions #'cape-ispell)
+   ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+   (add-to-list 'completion-at-point-functions #'cape-symbol)
+   (add-to-list 'completion-at-point-functions #'cape-line)
+ )
+ #+end_src
+
+*** Embark
+ #+begin_src elisp
+ (use-package embark
+   :demand t
+   :commands embark-prefix-help-command
+   :bind
+   (("C-." . embark-act)         ;; pick some comfortable binding
+    ("C-;" . embark-dwim)        ;; good alternative: M-.
+    ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+   :config
+   ;; Hide the mode line of the Embark live/completions buffers
+   (add-to-list 'display-buffer-alist
+                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                  nil
+                  (window-parameters (mode-line-format . none))))
+   :init
+   (setq prefix-help-command #'embark-prefix-help-command))
+ #+end_src
+
+**** =embark-consult=
+ #+begin_src elisp
+ (use-package embark-consult
+   :after (embark consult)
+   :demand t ; only necessary if you have the hook below
+   ;; if you want to have consult previews as you move around an
+   ;; auto-updating embark collect buffer
+   :hook
+   (embark-collect-mode . consult-preview-at-point-mode))
+ #+end_src
+
+*** Consult
+ #+begin_src elisp
+ (use-package consult
+   :demand t
+   :functions (consult-xref
+               consult-register-window
+               consult-register-format
+               consult--default-project--function
+               consult--customize-put)
+   :bind (;; C-c bindings (mode-specific-map)
+          ("C-c h" . consult-history)
+          ("C-c m" . consult-mode-command)
+          ("C-c k" . consult-kmacro)
+          ;; C-x bindings (ctl-x-map)
+          ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+          ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+          ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+          ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+          ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+          ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+          ;; Custom M-# bindings for fast register access
+          ("M-#" . consult-register-load)
+          ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+          ("C-M-#" . consult-register)
+          ;; Other custom bindings
+          ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+          ("<help> a" . consult-apropos)            ;; orig. apropos-command
+          ;; M-g bindings (goto-map)
+          ("M-g e" . consult-compile-error)
+          ("M-g f" . consult-flymake)
+          ("M-g g" . consult-goto-line)             ;; orig. goto-line
+          ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+          ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+          ("M-g m" . consult-mark)
+          ("M-g k" . consult-global-mark)
+          ("M-g i" . consult-imenu)
+          ("M-g I" . consult-imenu-multi)
+          ;; M-s bindings (search-map)
+          ("M-s d" . consult-find)
+          ("M-s D" . consult-locate)
+          ("M-s g" . consult-grep)
+          ("M-s G" . consult-git-grep)
+          ("M-s r" . consult-ripgrep)
+          ("M-s l" . consult-line)
+          ("M-s L" . consult-line-multi)
+          ("M-s m" . consult-multi-occur)
+          ("M-s k" . consult-keep-lines)
+          ("M-s u" . consult-focus-lines)
+          ;; Isearch integration
+          ("M-s e" . consult-isearch-history)
+          :map isearch-mode-map
+          ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+          ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+          ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+          ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+          ;; Minibuffer history
+          :map minibuffer-local-map
+          ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+          ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+
+   ;; Enable automatic preview at point in the *Completions* buffer. This is
+   ;; relevant when you use the default completion UI.
+   :hook (completion-list-mode . consult-preview-at-point-mode)
+   :init
+
+   ;; Optionally configure the register formatting. This improves the register
+   ;; preview for `consult-register', `consult-register-load',
+   ;; `consult-register-store' and the Emacs built-ins.
+   (setq register-preview-delay 0.5
+         register-preview-function #'consult-register-format)
+
+   ;; Optionally tweak the register preview window.
+   ;; This adds thin lines, sorting and hides the mode line of the window.
+   (advice-add #'register-preview :override #'consult-register-window)
+
+   ;; Use Consult to select xref locations with preview
+   (setq xref-show-xrefs-function #'consult-xref
+         xref-show-definitions-function #'consult-xref)
+
+   ;; Configure other variables and modes in the :config section,
+   ;; after lazily loading the package.
+   :config
+
+   ;; For some commands and buffer sources it is useful to configure the
+   ;; :preview-key on a per-command basis using the `consult-customize' macro.
+   (consult-customize
+    consult-theme
+    :preview-key '(:debounce 0.2 any)
+    consult-ripgrep consult-git-grep consult-grep
+    consult-bookmark consult-recent-file consult-xref
+    consult--source-bookmark consult--source-recent-file
+    consult--source-project-recent-file
+    :preview-key (kbd "M-."))
+
+   ;; Optionally configure the narrowing key.
+   ;; Both < and C-+ work reasonably well.
+   (setq consult-narrow-key "<") ;; (kbd "C-+")
+
+   ;; Optionally make narrowing help available in the minibuffer.
+   ;; You may want to use `embark-prefix-help-command' or which-key instead.
+   ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+   (setq consult-project-function #'consult--default-project--function)
+   )
+ #+end_src
+
+**** =consult-eglot=
+ #+begin_src elisp
+ (use-package consult-eglot
+   :after (consult eglot))
+ #+end_src
+
+**** =consult-dir=
+ #+begin_src elisp
+ (use-package consult-dir
+   :bind (("C-x C-d" . consult-dir)
+          :map minibuffer-local-completion-map
+          ("C-x C-d" . consult-dir)
+          ("C-x C-j" . consult-dir-jump-file)))
+ #+end_src
+
+*** Emacs Completion Configuration
+ #+begin_src elisp
+ (use-package emacs
+   :init
+   ;; TAB cycle if there are only few candidates
+   (setq completion-cycle-threshold 3)
+
+   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+   ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+   (setq read-extended-command-predicate
+         #'command-completion-default-include-p)
+
+   ;; Enable indentation+completion using the TAB key.
+   ;; `completion-at-point' is often bound to M-TAB.
+   (setq tab-always-indent 'complete))
+ #+end_src
+
+** Terminal Emulation
+*** Vterm
+#+begin_src elisp
+(use-package vterm
+  :bind
+  (:map vterm-mode-map
+        ("C-q" . vterm-send-next-key))
+  :config
+  (setq vterm-timer-delay 0.01)
+  (setq vterm-copy-exclude-prompt t)
+  (setq vterm-kill-buffer-on-exit t)
+  (setq vterm-max-scrollback 4000)
+  :init
+  (setq vterm-always-compile-module t))
+#+end_src
+
+*** =multi-vterm=
+#+begin_src elisp
+(use-package multi-vterm
+  :init
+  :bind
+  ("C-c t t" . multi-vterm)
+  ("C-c t v" . multi-vterm-dedicated-toggle)
+  ("C-c t n" . multi-vterm-next)
+  ("C-c t p" . multi-vterm-previous)
+  ("C-x p t" . multi-vterm-project)
+  :config
+  (setq multi-vterm-program "/bin/zsh"))
+#+end_src
+
+*** Eshell Vterm
+#+begin_src elisp
+(use-package eshell-vterm
+  :load-path "site-lisp/eshell-vterm"
+  :after (eshell vterm)
+  :commands eshell-vterm-mode
+  :config
+  (eshell-vterm-mode))
+#+end_src
+
+*** =eshell-prompt-extras=
+#+begin_src elisp
+(use-package eshell-prompt-extras
+  :commands (eshell-highlight-prompt eshell-prompt-function)
+  :config
+  (with-eval-after-load "esh-opt"
+    (autoload 'epe-theme-lambda "eshell-prompt-extras")
+    (setq eshell-highlight-prompt nil
+          eshell-prompt-function 'epe-theme-lambda)))
+#+end_src
+
+** Perspective
+#+begin_src elisp
+(use-package perspective
+  :commands persp-mode
+  :bind (("C-x b" . persp-switch-to-buffer*)
+         ("C-x k" . persp-kill-buffer*)
+         ("C-x C-b" . persp-ibuffer)
+         ("C-x M-p" . persp-mode-prefix-key))
+  :custom
+  (persp-mode-prefix-key (kbd "C-c M-p"))
+  :init
+  (persp-mode))
+#+end_src
+
+** Magit
+#+begin_src elisp
+(use-package magit)
+#+end_src
+
+*** =magit-todos=
+#+begin_src elisp
+(use-package magit-todos)
+#+end_src
+
+** Software Development
+*** LSP
+**** Eglot
+  #+begin_src elisp
+  (use-package eglot)
+  #+end_src
+
+*** =paredit=
+#+begin_src elisp
+(use-package paredit
+  :hook ((lisp-mode             . paredit-mode)
+         (lisp-interaction-mode . paredit-mode)
+         (emacs-lisp-mode       . paredit-mode)
+         (ielm-mode             . paredit-mode)
+         (scheme-mode           . paredit-mode)))
+#+end_src
+
+*** =dart-mode=
+ #+begin_src elisp
+ (use-package dart-mode
+   :mode "\\.dart\\'")
+ #+end_src
+
+*** Web Mode
+#+begin_src elisp
+(use-package web-mode
+  :mode ("\\(\\.html?\\|\\.njk\\)\\'"
+         "\\.jsx?$"
+         "\\.tsx?$"
+         "\\.phtml\\'"
+         "\\.tpl\\.php\\'"
+         "\\.mustache\\'"
+         "\\.djhtml\\'")
+  :config
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-enable-current-element-highlight t)
+  (setq web-mode-enable-current-column-highlight t)
+  (setq web-mode-ac-sources-alist
+        '(("css" . (ac-source-css-property))
+          ("html" . (ac-source-words-in-buffer ac-source-abbrev))))
+  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'"))))
+#+end_src
+
+** LaTex
+#+begin_src elisp
+(use-package tex-site :straight auctex)
+#+end_src
+
+** PDF
+#+begin_src elisp
+(use-package pdf-tools)
+(use-package pdf-view-restore)
+#+end_src
+
+** =org-superstar=
+#+begin_src elisp
+(use-package org-superstar
+  :hook (org-mode . org-superstar-mode)
+  :init
+  (setq org-superstar-headline-bullets-list '("§" "◆" "▹" "•" "◆" "▹" "•" "◆" "▹" "•" "◆" "▹" "•")))
+#+end_src
+
+** Hyperbole
+#+begin_src elisp :tangle no
+(use-package hyperbole
+  :commands hyperbole-mode
+  :init
+  (hyperbole-mode 1))
+#+end_src
+
+** =anzu=
+#+begin_src elisp
+(use-package anzu
+:diminish
+:commands global-anzu-mode
+:config
+(global-set-key [remap query-replace] 'anzu-query-replace)
+(global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
+:init (global-anzu-mode +1))
+#+end_src
+** Text Alignment
+*** Smart Hungry Delete
+#+begin_src elisp
+(use-package smart-hungry-delete
+  :bind (([remap backward-delete-char-untabify] . smart-hungry-delete-backward-char)
+        ([remap delete-backward-char] . smart-hungry-delete-backward-char)
+        ([remap delete-char] . smart-hungry-delete-forward-char))
+  :init (smart-hungry-delete-add-default-hooks))
+#+end_src
+
+*** Interactive Align
+#+begin_src elisp
+(use-package ialign
+  :bind ("C-x l" . ialign))
+#+end_src
+** Snippets
+#+begin_src elisp
+(use-package yasnippet
+  :bind
+  ("C-c s" . yas-insert-snippet)
+  :init
+  (yas-global-mode)
+  :config
+  (setq yas-wrap-around-region t)
+  :diminish yas-minor-mode)
+
+(use-package yasnippet-snippets
+  :after yasnippet
+  :config
+  (defvar yasnippet-snippets-directory
+    (concat user-emacs-directory "straight/build/yasnippet-snippets/snippets/"))
+  (yas-reload-all))
+#+end_src
+
+** Olivetti
+Center buffers and text.
+
+#+begin_src elisp
+(use-package olivetti
+  :diminish olivetti-mode
+  :hook ((org-mode . olivetti-mode)
+         (fundamental-mode . olivetti-mode))
+  :config
+  (setq-default olivetti-body-width 83)
+  (remove-hook 'olivetti-mode-on-hook 'visual-line-mode))
+#+end_src
+** Org Roam
+#+begin_src elisp
+(use-package org-roam
+  :custom
+  (org-roam-directory (concat "roam" org-directory))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n g" . org-roam-graph)
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n c" . org-roam-capture)
+         ;; Dailies
+         ("C-c n j" . org-roam-dailies-capture-today))
+  :config
+  ;; If you're using a vertical completion framework, you might want a more informative completion interface
+  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  (org-roam-db-autosync-mode))
+  ;; If using org-roam-protocol
+  ;; (require 'org-roam-protocol))
+#+end_src
+** Visual Undo
+#+begin_src elisp
+(use-package vundo
+  :bind ("C-c z" . vundo)
+  :config
+  (setq vundo-glyph-alist vundo-unicode-symbols))
+#+end_src
+
+* Keybindings
+#+begin_src elisp
+(bind-key "C-c c i" 'open-init-org-file)
+(bind-key "C-c c t" 'open-minerva-theme-file)
+(bind-key "C-c c z" 'open-zshrc-file)
+(bind-key "C-<backspace>" (lambda () (interactive (kill-line 0))))
+(bind-key "C-c y" 'yank-from-kill-ring)
+#+end_src
+
+* Aesthetics
+For making Emacs look /good/.
+
+Keep fringes to a minimum:
+
+#+begin_src elisp
+(fringe-mode '(1 . 1))
+#+end_src
+
+** Fonts
+#+begin_src elisp
+(set-face-attribute 'default nil
+                    :weight 'regular
+                    :height 120
+                    :width 'normal)
+#+end_src
+
+** Emojify
+#+begin_src elisp
+(use-package emojify
+  :defer t)
+#+end_src
+
+** Prettify Symbols
+Prettify some Greek symbols.
+#+begin_src elisp
+(setq-default prettify-symbols-alist
+              '(("lambda" . ?λ)
+                ("delta" . ?Δ)
+                ("gamma" . ?Γ)
+                ("phi" . ?φ)
+                ("psi" . ?ψ)))
+#+end_src
+
+** Icons
+#+begin_src elisp
+(use-package all-the-icons
+  :defer t
+  :commands all-the-icons-install-fonts
+  :config
+  (when (not (member "all-the-icons" (font-family-list)))
+    (all-the-icons-install-fonts t)))
+#+end_src
+
+** Dashboard
+#+begin_src elisp
+(use-package dashboard
+  :commands dashboard-setup-startup-hook
+  :init
+  (dashboard-setup-startup-hook)
+  :config
+  (setq dashboard-startup-banner [0])
+  (setq dashboard-center-content t)
+  (setq dashboard-items '((agenda . 5)
+                          (projects . 5)
+                          (recents  . 5)
+                          (bookmarks . 5)
+                          (registers . 5)))
+  (setq dashboard-bookmarks-item-format "%s")
+  (setq dashboard-footer-messages
+        '("Purity of the heart is to will one thing."
+          "Every good and every perfect gift is from above."
+          "Love shall cover a multitude of sins.")))
+#+end_src
+
+** Internationalization
+#+begin_src elisp
+(use-package pangu-spacing
+  :diminish pangu-spacing-mode
+  :commands global-pangu-spacing-mode
+  :init (global-pangu-spacing-mode 1)
+  :config (setq pangu-spacing-real-insert-separtor t))
+#+end_src
+
+** Indent Guide
+#+begin_src elisp
+(use-package highlight-indentation
+  :commands  highlight-indentation-mode highlight-indentation-current-column-mode
+  :hook ((prog-mode . highlight-indentation-mode)
+         (org-mode . highlight-indentation-mode))
+  :diminish)
+#+end_src
+
+** Page Break Line
+#+begin_src elisp
+(use-package page-break-lines
+  :diminish
+  :commands global-page-break-lines-mode
+  :init (global-page-break-lines-mode))
+#+end_src
+
+** Rainbow Mode
+For hex colors:
+
+#+begin_src elisp
+(use-package rainbow-mode
+  :hook ((org-mode . rainbow-mode)
+         (prog-mode . rainbow-mode))
+  :diminish)
+#+end_src
+
+** Rainbow Delimiters
+#+begin_src elisp
+(use-package rainbow-delimiters
+  :commands rainbow-delimiters-mode
+  :hook ((org-mode . rainbow-delimiters-mode)
+         (prog-mode . rainbow-delimiters-mode))
+  :diminish rainbow-delimiters-mode)
+#+end_src
+
+* Miscellaneous
+#+begin_src elisp
+  (use-package dissociate
+    :bind
+    ("s-D" . dissociated-press))
+#+end_src
+
+* Appendix
+** Glossary
+*** Lexical Binding
+  Lexical binding concerns the valid environment(s) within which a bound
+  variable can be referenced. A lexically scoped variable is bound only
+  under the construct in which it is defined.
+
+  Compare the output of these two code blocks, the former with lexical
+  binding and the latter without:
+
+  #+begin_src elisp :tangle no :lexical t
+  (setq first-day-of-the-universe
+        (let ((there-be-light "There was light."))
+          (lambda () there-be-light)))
+  (funcall first-day-of-the-universe)
+  #+end_src
+
+  #+begin_src elisp :tangle no :lexical nil
+  (setq first-day-of-the-universe
+        (let ((there-be-light "There was (maybe) light."))
+          (lambda () there-be-light)))
+  (funcall first-day-of-the-universe)
+  ;; error→  Symbol's value as variable is void: there-be-light
+  #+end_src
+
+  Why is the value of =there-be-light= void in the second code block? It is bound
+  only within the =let= form.
+
+  It's kind of like the air inside of a bubble. It will exist as long as
+  the bubble maintains its form until the bubble pops. The air will
+  still exist but it won't be air inside the bubble anymore. Lexically
+  scoped variables are like that too.
+
+  A good question to ask yourself if you want to remember the difference between
+  lexical and dynamic scoping is this: is the variable "globally" accessible?
