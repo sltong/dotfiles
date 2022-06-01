@@ -61,6 +61,7 @@ Some definitions and configuration of common directories and files:
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 #+end_src
+
 *** =use-package= and =straight= Setup
 #+begin_src elisp
 (defvar bootstrap-version)
@@ -102,31 +103,32 @@ Some definitions and configuration of common directories and files:
 
 ** Org Mode Configuration
 #+begin_src elisp
-  (use-package org
-    :straight org-contrib
-    :bind
-    (:map org-mode-map ("M-<up>" . org-shiftup)
-		       ("M-<down>" . org-shiftdown))
-    :config
-    (setq org-directory "~/org")
-    (setq org-agenda-files (expand-file-name "todo/agendas.org" org-directory))
-    (setq org-todo-keywords '((sequence "TODO" "IN-PROGRESS" "WAITING"
-					"|" "DONE" "CANCELLED")))
-    (setq org-tag-alist '(("@work" . ?w)
-			  ("@home" . ?h)
-			  ("studygarden" . ?s)))
-    (setq org-special-ctrl-a/e t)
-    (setq org-display-custom-times t)
-    (setq org-adapt-indentation t) ; align content with headlines
-    (setq org-edit-src-content-indentation nil) ; align code blocks with markers
-    (setq org-src-tab-acts-natively t)
-    (setq org-src-preserve-indentation nil)
-    (setq org-src-fontify-natively t)
-    (setq org-log-done t)
-    (setq org-html-doctype "html5")
-    (setq org-startup-indented t)
-    (setq org-support-shift-select t)
-    (setq org-hide-leading-stars t))
+(use-package org
+  :straight org-contrib
+  :bind
+  (:map org-mode-map ("M-<up>" . org-shiftup)
+       ("M-<down>" . org-shiftdown))
+  :config
+  (setq org-directory "~/org")
+  (setq org-agenda-files (expand-file-name "todo/agendas.org" org-directory))
+  (setq org-todo-keywords
+        '((sequence "TODO" "IN-PROGRESS" "WAITING"
+                    "|" "DONE" "CANCELLED")))
+  (setq org-tag-alist '(("@work" . ?w)
+                        ("@home" . ?h)
+                        ("studygarden" . ?s)))
+  (setq org-special-ctrl-a/e t)
+  (setq org-display-custom-times t)
+  (setq org-adapt-indentation t) ; align content with headlines
+  (setq org-edit-src-content-indentation 0) ; align code blocks with markers
+  (setq org-src-tab-acts-natively t)
+  (setq org-src-preserve-indentation nil)
+  (setq org-src-fontify-natively t)
+  (setq org-log-done t)
+  (setq org-html-doctype "html5")
+  (setq org-startup-indented t)
+  (setq org-support-shift-select t)
+  (setq org-hide-leading-stars t))
 #+end_src
 
 ** User and System Information
@@ -170,16 +172,16 @@ Some definitions and configuration of common directories and files:
 #+end_src
 
 ** Environment Variables
-Get environment variables from shell with =exec-path-from-shell=:
+   Get environment variables from shell with =exec-path-from-shell=:
 
-#+begin_src elisp
-(use-package exec-path-from-shell
-  :defer nil
-  :commands exec-path-from-shell-initialize
-  :if (memq window-system '(mac ns))
-  :config
-  (exec-path-from-shell-initialize))
-#+end_src
+   #+begin_src elisp
+   (use-package exec-path-from-shell
+     :defer nil
+     :commands exec-path-from-shell-initialize
+     :if (memq window-system '(mac ns))
+     :config
+     (exec-path-from-shell-initialize))
+   #+end_src
 
 ** Default Configurations
 #+begin_src elisp
@@ -189,12 +191,13 @@ Get environment variables from shell with =exec-path-from-shell=:
 (setq-default auto-revert-interval 3) ; 3 seconds to check autoreverts
 (setq-default completion-cycle-threshold 3) ; 3 completion candidates
 (setq-default completion-ignore-case t)
+(setq-default echo-keystrokes 0.4)
 (setq-default enable-recursive-minibuffers t)
 (setq-default fill-column 80)
 (setq-default frame-resize-pixelwise t) ; set pixelwise resizing
 (setq-default initial-major-mode 'org-mode) ; org mode for new buffers
 (setq-default initial-scratch-message "") ; blank scratch buffers
-(setq-default large-file-warning-threshold (* 1024 1024 1024 2)) ; warn about files >= 2GB
+(setq-default large-file-warning-threshold (* 1024 1024 1024 2)) ; no warning until file is 2GB
 (setq-default read-buffer-completion-ignore-case t)
 (setq-default read-file-name-completion-ignore-case t)
 (setq-default read-process-output-max (* 1024 1024)) ; allow reading 2MB from subprocesses
@@ -202,9 +205,9 @@ Get environment variables from shell with =exec-path-from-shell=:
 (setq-default sentence-end-double-space nil)
 (setq-default tab-always-indent 'complete) ; indent first, then try to complete at point
 (setq-default tab-width 4)
-(setq-default truncate-lines t) ; never play continuation lines
+(setq-default truncate-lines t) ; never display continuation lines
 (setq-default use-dialog-box nil)
-(setq-default vc-follow-symlinks t)
+(setq-default vc-follow-symlinks nil)
 (setq-default x-stretch-cursor t) ; stretch cursor to size of glyph under it
 (setq-default x-gtk-resize-child-frames t)
 (setq native-comp-async-report-warnings-errors 'silent)
@@ -551,14 +554,9 @@ Set =utf-8= as preferred encoding:
  #+end_src
 
 *** Consult
- #+begin_src elisp
- (use-package consult
+#+begin_src elisp
+(use-package consult
    :demand t
-   :functions (consult-xref
-               consult-register-window
-               consult-register-format
-               consult--default-project--function
-               consult--customize-put)
    :bind (;; C-c bindings (mode-specific-map)
           ("C-c h" . consult-history)
           ("C-c m" . consult-mode-command)
@@ -771,12 +769,7 @@ Set =utf-8= as preferred encoding:
 
 *** =paredit=
 #+begin_src elisp
-(use-package paredit
-  :hook ((lisp-mode             . paredit-mode)
-         (lisp-interaction-mode . paredit-mode)
-         (emacs-lisp-mode       . paredit-mode)
-         (ielm-mode             . paredit-mode)
-         (scheme-mode           . paredit-mode)))
+(use-package paredit :init (enable-paredit-mode))
 #+end_src
 
 *** =dart-mode=
@@ -844,6 +837,7 @@ Set =utf-8= as preferred encoding:
 (global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
 :init (global-anzu-mode +1))
 #+end_src
+
 ** Text Alignment
 *** Smart Hungry Delete
 #+begin_src elisp
@@ -859,6 +853,7 @@ Set =utf-8= as preferred encoding:
 (use-package ialign
   :bind ("C-x l" . ialign))
 #+end_src
+
 ** Snippets
 #+begin_src elisp
 (use-package yasnippet
@@ -890,6 +885,7 @@ Center buffers and text.
   (setq-default olivetti-body-width 83)
   (remove-hook 'olivetti-mode-on-hook 'visual-line-mode))
 #+end_src
+
 ** Org Roam
 #+begin_src elisp
 (use-package org-roam

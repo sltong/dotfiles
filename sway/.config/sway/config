@@ -1,5 +1,10 @@
 # autostart
+exec --no-startup-id dbus-update-activation-environment --all
 exec gentoo-pipewire-launcher
+exec discord
+exec telegram-desktop
+exec signal-desktop
+exec keepassxc
 
 ### Variables
 #
