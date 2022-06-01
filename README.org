@@ -1,0 +1,6 @@
+#+title: Dotfiles
+#+author: Lao Tong
+#+date: <2022-05-31 Tue>
+
+This repository contains the dotfiles and configurations for the various
+programs I use.
