@@ -95,13 +95,14 @@ export CHROME_EXECUTABLE="/opt/google/chrome/google-chrome"
 export XDG_SESSION_TYPE=wayland
 export QT_QPA_PLATFORM=wayland-egl
 export QT_WAYLAND_FORCE_DPI=physical
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+export QT_QPA_PLATFORMTHEME=qt5ct
 
 # android studio
 # android studio has a weird graphical glitch with sway
 export _JAVA_AWT_WM_NONREPARENTING=1
 export ANDROID_SDK="~/Android/Sdk"
 export CAPACITOR_ANDROID_STUDIO_PATH="/opt/android-studio/bin/studio.sh"
-
 
 # emacs
 export EMACS_SOCKET_NAME="/run/user/$(id -u)/emacs/server"

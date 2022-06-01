@@ -1,5 +1,5 @@
 # autostart
-exec pulseaudio -D
+exec gentoo-pipewire-launcher
 
 ### Variables
 #
@@ -200,7 +200,7 @@ bar swaybar_command waybar
 
 # swayidle
 exec swayidle -w \
-         timeout 300 'swaylock -f -c 000000' \
+         timeout 420 'swaylock -f -c 000000' \
          timeout 600 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' \
          before-sleep 'swaylock -f -c 000000'
 

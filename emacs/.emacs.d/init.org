@@ -25,6 +25,36 @@ Enable lexical binding:
 ;;; -*- lexical-binding: t -*-
 #+end_src
 
+** Files and Directories
+Some definitions and configuration of common directories and files:
+
+#+begin_src elisp
+(defvar dotfiles-directory (expand-file-name "~/.dotfiles/"))
+(defvar config-directory (expand-file-name "~/.config/"))
+(setq user-emacs-directory (concat dotfiles-directory "emacs/.emacs.d/"))
+(defvar lao/sway-config-file (concat config-directory "sway/config"))
+(defvar init-org-file (concat user-emacs-directory "init.org"))
+(defun open-init-org-file ()
+  "Open the =init.org= file in the emacs directory."
+  (interactive)
+  (find-file init-org-file))
+(defvar user-init-file (concat user-emacs-directory "init.el"))
+(defvar lao/minerva-theme-file (concat user-emacs-directory "etc/themes/minerva-theme.el"))
+(defun open-minerva-theme-file ()
+  "Open the =Minerva= theme file in the emacs directory."
+  (interactive)
+  (find-file lao/minerva-theme-file))
+(defvar lao/zshrc-file (expand-file-name "~/.zshrc"))
+(defun open-zshrc-file ()
+  "Open the .zshrc configuration file."
+  (interactive)
+  (find-file lao/zshrc-file))
+(defvar snippets-directory
+  (concat user-emacs-directory "snippets/"))
+(add-to-list 'custom-theme-load-path
+             (concat user-emacs-directory "etc/themes/"))
+#+end_src
+
 ** Package Management
 *** Package Archives
 #+begin_src elisp
@@ -129,34 +159,6 @@ Enable lexical binding:
       `((".*" . ,emacs-autosave-directory)))
 (setq auto-save-file-name-transforms
       `((".*" ,emacs-autosave-directory t)))
-#+end_src
-
-*** Files and Directories
-Some definitions and configuration of common directories and files:
-
-#+begin_src elisp
-(defvar config-directory (expand-file-name "~/.config"))
-(defvar lao/sway-config-file (concat config-directory "sway/config"))
-(defvar init-org-file (concat user-emacs-directory "init.org"))
-(defun open-init-org-file ()
-  "Open the =init.org= file in the emacs directory."
-  (interactive)
-  (find-file init-org-file))
-(defvar user-init-file (concat user-emacs-directory "init.el"))
-(defvar lao/minerva-theme-file (concat user-emacs-directory "etc/themes/minerva-theme.el"))
-(defun open-minerva-theme-file ()
-  "Open the =Minerva= theme file in the emacs directory."
-  (interactive)
-  (find-file lao/minerva-theme-file))
-(defvar lao/zshrc-file (expand-file-name "~/.zshrc"))
-(defun open-zshrc-file ()
-  "Open the .zshrc configuration file."
-  (interactive)
-  (find-file lao/zshrc-file))
-(defvar snippets-directory
-  (concat user-emacs-directory "snippets/"))
-(add-to-list 'custom-theme-load-path
-             (concat user-emacs-directory "etc/themes/"))
 #+end_src
 
 ** Authorization and Security
