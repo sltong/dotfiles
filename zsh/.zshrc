@@ -82,7 +82,8 @@ export EDITOR="emacs"
 export VISUAL="emacs"
 
 # path
-export PATH="$PATH:/opt/flutter/bin"
+export PATH=$PATH:~/.local/bin
+export PATH=$PATH:/opt/flutter/bin
 
 # aliases
 # alias zshconfig="emacs ~/.zshrc"

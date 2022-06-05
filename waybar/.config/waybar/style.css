@@ -1,21 +1,25 @@
+@define-color primary #463064;
+@define-color primary-light #704997;
+@define-color text #f0ecf4;
+@define-color text-muted #c4bccd;
 * {
   font-size: 18px;
   font-family: monospace;
 }
 
 window#waybar {
-  background: #473561;
-  color: #fff6f3;
+  background: @primary;
+  color: @text;
 }
 
 #custom-right-arrow-dark,
 #custom-left-arrow-dark {
-	color: #6d5194;
+    color: #6d5194;
 }
 #custom-right-arrow-light,
 #custom-left-arrow-light {
   color: #473561;
-  background: #6d5194;
+  background: @primary-light;
 }
 
 #workspaces,
@@ -29,16 +33,16 @@ window#waybar {
 #battery,
 #disk,
 #tray {
-	background: #6d5194;
+  background: @primary-light;
 }
 
 #clock.2 {
-  color: #ffffff;
+  color: @text;
 }
 
 #clock.1,
 #clock.3 {
-  color: #CDBFE0;
+  color: @text-muted;
 }
 
 #tray {
@@ -46,19 +50,19 @@ window#waybar {
 }
 
 #workspaces button {
-	padding: 0 6px;
-    color: #a990cb;
+  padding: 0 12px;
+  color: @text-muted;
 }
 #workspaces button.focused {
-	color: #ffffff;
+  color: @text;
 }
 #workspaces button:hover {
-	box-shadow: inherit;
-	text-shadow: inherit;
+  box-shadow: inherit;
+  text-shadow: inherit;
 }
 #workspaces button:hover {
   color: #fee97c;
-  background: #473561;
+  background: @primary;
 }
 
 #pulseaudio,

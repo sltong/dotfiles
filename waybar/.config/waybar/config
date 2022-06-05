@@ -18,7 +18,6 @@
   ],
   "modules-right": [
     "custom/left-arrow-dark",
-    "tray",
     "memory",
     "cpu",
     "disk",

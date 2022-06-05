@@ -4,12 +4,11 @@
 #+property: header-args :tangle yes
 
 * About
-This is my =init.el=, or more precisely, the =init.org= which generates my
-=init.el=. This file follows the conventions of the literate programming style.
-As you read this document, you will encounter commentary on source code blocks.
-The =init.el= file is generated through Org Mode's Babel feature. It "tangles"
-source code blocks by loading them onto an external file (in this case, the
-=init.el= file)
+This =init.org= document generates =init.el=. This file follows the conventions
+of the literate programming style. As you read this document, you will encounter
+commentary on source code blocks. The =init.el= file is generated through Org
+Mode's Babel feature. It "tangles" source code blocks by loading them onto an
+external file (in this case, the =init.el= file).
 
 Most of the code blocks in this document will have been included in the
 generated =init.el= file, but there are certain exceptions identifiable by a
@@ -26,33 +25,41 @@ Enable lexical binding:
 #+end_src
 
 ** Files and Directories
-Some definitions and configuration of common directories and files:
 
+*** Emacs Files and Directories
 #+begin_src elisp
-(defvar dotfiles-directory (expand-file-name "~/.dotfiles/"))
-(defvar config-directory (expand-file-name "~/.config/"))
-(setq user-emacs-directory (concat dotfiles-directory "emacs/.emacs.d/"))
-(defvar lao/sway-config-file (concat config-directory "sway/config"))
-(defvar init-org-file (concat user-emacs-directory "init.org"))
+(defvar dotfiles-directory (expand-file-name "~/.dotfiles"))
+(setq user-emacs-directory (expand-file-name "emacs/.emacs.d/" dotfiles-directory))
+(defvar snippets-directory
+  (expand-file-name "snippets" user-emacs-directory))
+(defvar user-init-org-file (expand-file-name "init.org" user-emacs-directory))
+(defvar user-init-file (expand-file-name "init.el" user-emacs-directory))
 (defun open-init-org-file ()
   "Open the =init.org= file in the emacs directory."
   (interactive)
-  (find-file init-org-file))
-(defvar user-init-file (concat user-emacs-directory "init.el"))
-(defvar lao/minerva-theme-file (concat user-emacs-directory "etc/themes/minerva-theme.el"))
+  (find-file user-init-org-file))
+#+end_src
+
+**** Theme Files and Directories
+#+begin_src elisp
+(defvar user-emacs-theme-directory (expand-file-name "etc/themes" user-emacs-directory))
+(add-to-list 'custom-theme-load-path user-emacs-theme-directory)
+(defvar lao/minerva-theme-file (expand-file-name "etc/themes/minerva-theme.el" user-emacs-directory))
 (defun open-minerva-theme-file ()
   "Open the =Minerva= theme file in the emacs directory."
   (interactive)
   (find-file lao/minerva-theme-file))
+#+end_src
+
+*** Configuration Files and Directories
+#+begin_src elisp
+(defvar config-directory (expand-file-name "~/.config"))
+(defvar lao/sway-config-file (expand-file-name "sway/config" config-directory))
 (defvar lao/zshrc-file (expand-file-name "~/.zshrc"))
 (defun open-zshrc-file ()
   "Open the .zshrc configuration file."
   (interactive)
   (find-file lao/zshrc-file))
-(defvar snippets-directory
-  (concat user-emacs-directory "snippets/"))
-(add-to-list 'custom-theme-load-path
-             (concat user-emacs-directory "etc/themes/"))
 #+end_src
 
 ** Package Management
@@ -92,7 +99,9 @@ Some definitions and configuration of common directories and files:
 #+begin_src elisp
 (use-package async
   :config (dired-async-mode 1))
-(use-package multiple-cursors)
+(use-package multiple-cursors
+  :bind
+  ("C-S-c C-S-c" . mc/edit-lines))
 (use-package restart-emacs
   :bind
   ("C-c r" . restart-emacs))
@@ -117,6 +126,7 @@ Some definitions and configuration of common directories and files:
   (setq org-tag-alist '(("@work" . ?w)
                         ("@home" . ?h)
                         ("studygarden" . ?s)))
+  (setq org-confirm-babel-evaluate nil)
   (setq org-special-ctrl-a/e t)
   (setq org-display-custom-times t)
   (setq org-adapt-indentation t) ; align content with headlines
@@ -220,6 +230,7 @@ Some definitions and configuration of common directories and files:
               mode-line-position-column-format '(" %l:%c")
               mode-line-position-column-line-format '(" %l:%c"))
 #+end_src
+
 *** UTF-8 Encoding
 Set =utf-8= as preferred encoding:
 
@@ -254,12 +265,9 @@ Set =utf-8= as preferred encoding:
 ** Initial Hooks
 #+begin_src elisp
 (add-hook 'after-save-hook
-	    (lambda ()
-		(when (equal (buffer-file-name)
-			     (expand-file-name (concat user-emacs-directory "init.org")))
-		  (org-babel-load-file
-		   (concat user-emacs-directory "init.org"))
-		  (async-byte-compile-file (concat user-emacs-directory "init.el")))))
+          (lambda ()
+            (when (equal buffer-file-name user-init-org-file)
+              (org-babel-load-file user-init-org-file))))
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 #+end_src
 
@@ -448,39 +456,35 @@ Set =utf-8= as preferred encoding:
  #+end_src
 
 *** Corfu
- #+begin_src elisp
- (use-package corfu
-   :demand t
-   :commands (corfu-mode
-              global-corfu-mode
-              corfu-enable-in-minibuffer
-              corfu-enable-always-in-minibuffer)
-   :config
-   (defun corfu-enable-in-minibuffer ()
-     "Enable Corfu in the minibuffer if `completion-at-point' is bound."
-     (when (where-is-internal #'completion-at-point (list (current-local-map)))
-       ;; (setq-local corfu-auto nil) Enable/disable auto completion
-       (corfu-mode 1)))
-   (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
-   (defun corfu-enable-always-in-minibuffer ()
-     "Enable Corfu in the minibuffer if Vertico/Mct are not active."
-     (unless (or (bound-and-true-p mct--active)
-                 (bound-and-true-p vertico--input))
-       (corfu-mode 1)))
-   (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
-   :custom
-   (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-   (corfu-auto t)                 ;; Enable auto completion
-   (corfu-preselect-first nil)
-   (corfu-separator ?\s)          ;; Orderless field separator
-   :bind
-   ;; Configure SPC for separator insertion
-   (:map corfu-map
-         ("SPC" . corfu-insert-separator)
-         ("M-n" . corfu-next)
-         ("M-p" . corfu-previous))
-   :init
-   (global-corfu-mode))
+#+begin_src elisp
+(use-package corfu
+  :demand t
+  :config
+  (defun corfu-enable-in-minibuffer ()
+    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+    (when (where-is-internal #'completion-at-point (list (current-local-map)))
+      ;; (setq-local corfu-auto nil) Enable/disable auto completion
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active)
+                (bound-and-true-p vertico--input))
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
+  (corfu-preselect-first nil)
+  (corfu-separator ?\s)          ;; Orderless field separator
+  :bind
+  ;; Configure SPC for separator insertion
+  (:map corfu-map
+        ("SPC" . corfu-insert-separator)
+        ("M-n" . corfu-next)
+        ("M-p" . corfu-previous))
+  :init
+  (global-corfu-mode))
  #+end_src
 
 *** Cape
@@ -709,7 +713,7 @@ Set =utf-8= as preferred encoding:
   ("C-c t t" . multi-vterm)
   ("C-c t v" . multi-vterm-dedicated-toggle)
   ("C-c t n" . multi-vterm-next)
-  ("C-c t p" . multi-vterm-previous)
+  ("C-c t p" . multi-vterm-prev)
   ("C-x p t" . multi-vterm-project)
   :config
   (setq multi-vterm-program "/bin/zsh"))
@@ -832,9 +836,6 @@ Set =utf-8= as preferred encoding:
 (use-package anzu
 :diminish
 :commands global-anzu-mode
-:config
-(global-set-key [remap query-replace] 'anzu-query-replace)
-(global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp)
 :init (global-anzu-mode +1))
 #+end_src
 
@@ -890,7 +891,7 @@ Center buffers and text.
 #+begin_src elisp
 (use-package org-roam
   :custom
-  (org-roam-directory (concat "roam" org-directory))
+  (org-roam-directory (expand-file-name "roam" org-directory))
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
          ("C-c n g" . org-roam-graph)
@@ -912,6 +913,16 @@ Center buffers and text.
   :config
   (setq vundo-glyph-alist vundo-unicode-symbols))
 #+end_src
+** Matching and Regex
+#+begin_src elisp
+(use-package visual-regexp
+  :config
+  (global-set-key [remap query-replace] 'vr/replace)
+  (global-set-key [remap query-replace-regexp] 'vr/query-replace))
+(use-package visual-regexp-steroids
+  :bind (:map esc-map (("C-r" . vr/isearch-backward)
+                       ("C-s" . vr/isearch-forward))))
+#+end_src
 
 * Keybindings
 #+begin_src elisp
@@ -929,6 +940,22 @@ Keep fringes to a minimum:
 
 #+begin_src elisp
 (fringe-mode '(1 . 1))
+#+end_src
+
+** Theme
+#+begin_src elisp
+(load-theme 'minerva)
+#+end_src
+
+** Mode Line
+#+begin_src elisp
+(use-package moody
+  :config
+  (setq x-underline-at-descent-line t)
+  (setq moody-mode-line-height 28)
+  (moody-replace-mode-line-buffer-identification)
+  (moody-replace-vc-mode)
+  (moody-replace-eldoc-minibuffer-message-function))
 #+end_src
 
 ** Fonts
