@@ -1,10 +1,13 @@
 # autostart
 exec --no-startup-id dbus-update-activation-environment --all
+exec swaync
 exec gentoo-pipewire-launcher
 exec discord
 exec telegram-desktop
 exec signal-desktop
 exec keepassxc
+exec spotify
+exec firefox
 
 ### Variables
 #
@@ -20,7 +23,7 @@ set $term alacritty
 set $menu bemenu-run | xargs swaymsg exec --
 
 ### Output configuration
-output eDPI-1 resolution 1920x1080 background #1A171C solid_color
+output eDPI-1 resolution 1920x1080 bg #1A171C solid_color
 
 ### Input configuration
 input "1267:12440:ELAN1201:00_04F3:3098_Touchpad" {
@@ -99,6 +102,10 @@ set $ws1 emacs
 
 # default workspaces for programs
 assign [class="Emacs"] workspace number 1
+assign [class="discord"] workspace number 6
+assign [class="Signal"] workspace number 6
+assign [class="Spotify"] workspace number 7
+assign [app_id="org.keepassxc.KeePassXC"] workspace 10
 
 # Switch to workspace
 bindsym $mod+1 workspace number 1
@@ -199,8 +206,11 @@ bindsym $mod+r mode "resize"
 set $color #543f72
 set $highlight #a88ad0
 gaps inner 16
+client.focused "#493664" "#493664" "#ffffff" "#b08dc8" "#493664"
+
+# titlebar
+font pango:PP Object Sans 11
 title_align center
-client.focused "#463064" "#463064" "#ffffff" "#b08dc8" "#463064"
 
 bar swaybar_command waybar
 
@@ -209,5 +219,8 @@ exec swayidle -w \
          timeout 420 'swaylock -f -c 000000' \
          timeout 600 'swaymsg "output * dpms off"' resume 'swaymsg "output * dpms on"' \
          before-sleep 'swaylock -f -c 000000'
+
+# sway notification center (swaync)
+bindsym $mod+Alt+n exec swaync-client -t -sw
 
 include /etc/sway/config.d/*

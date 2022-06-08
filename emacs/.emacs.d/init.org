@@ -25,7 +25,6 @@ Enable lexical binding:
 #+end_src
 
 ** Files and Directories
-
 *** Emacs Files and Directories
 #+begin_src elisp
 (defvar dotfiles-directory (expand-file-name "~/.dotfiles"))
@@ -108,15 +107,16 @@ Enable lexical binding:
 (use-package goto-line-preview
   :bind
   ("M-g M-g" . goto-line-preview))
+(use-package tiny)
 #+end_src
 
 ** Org Mode Configuration
 #+begin_src elisp
 (use-package org
-  :straight org-contrib
+  :straight (:type built-in)
   :bind
   (:map org-mode-map ("M-<up>" . org-shiftup)
-       ("M-<down>" . org-shiftdown))
+                     ("M-<down>" . org-shiftdown))
   :config
   (setq org-directory "~/org")
   (setq org-agenda-files (expand-file-name "todo/agendas.org" org-directory))
@@ -132,7 +132,6 @@ Enable lexical binding:
   (setq org-adapt-indentation t) ; align content with headlines
   (setq org-edit-src-content-indentation 0) ; align code blocks with markers
   (setq org-src-tab-acts-natively t)
-  (setq org-src-preserve-indentation nil)
   (setq org-src-fontify-natively t)
   (setq org-log-done t)
   (setq org-html-doctype "html5")
@@ -248,7 +247,7 @@ Set =utf-8= as preferred encoding:
 (global-so-long-mode 1) ; avoid performance issues with files with long names
 (display-time-mode 1) ; always show the time
 (savehist-mode) ; save point at files
-(pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
+;;(pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
 #+end_src
 
 *** Savehist
@@ -257,7 +256,7 @@ Set =utf-8= as preferred encoding:
 #+end_src
 
 *** Desktop Mode
-**** TODO fix 'Wrong type argument: hash-table-p, "Unprintable entity"' error
+*** TODO fix 'Wrong type argument: hash-table-p, "Unprintable entity"' error
 #+begin_src elisp :tangle no
 (desktop-save-mode 1) ; persistent windows and frames upon restart
 #+end_src
@@ -273,12 +272,6 @@ Set =utf-8= as preferred encoding:
 
 * Packages
 ** Built-in Packages
-*** Xref
- #+begin_src elisp
- (use-package xref
-   :commands (xref-show-xrefs-function xref-show-definitions-function))
- #+end_src
-
 *** Recent Files
 #+begin_src elisp
 (use-package recentf
@@ -290,70 +283,74 @@ Set =utf-8= as preferred encoding:
 #+end_src
 
 *** Diminish
- #+begin_src elisp
- (use-package diminish)
- #+end_src
+#+begin_src elisp
+(use-package diminish)
+#+end_src
 
 *** Whitespace
- #+begin_src elisp
- (use-package whitespace
-   :diminish global-whitespace-mode
-   :config
-   (setq whitespace-line-column nil)
-   (setq whitespace-style '(face indentation
-                            tabs tab-mark
-                            spaces space-mark
-                            newline
-                            trailing lines-tail))
-   (setq whitespace-display-mappings
-    '((tab-mark ?\t [?› ?\t])
-      (newline-mark ?\u2B90 [?\u23ce])
-      (space-mark ?\u3000 [?\u25a1])))
-   (setq whitespace-space-regexp "\\(\u3000+\\)")
-   :init
-   (global-whitespace-mode))
- #+end_src
+#+begin_src elisp
+(use-package whitespace
+  :diminish global-whitespace-mode
+  :config
+  (setq whitespace-line-column nil)
+  (setq whitespace-style '(face indentation
+                           tabs tab-mark
+                           spaces space-mark
+                           newline
+                           trailing lines-tail))
+  (setq whitespace-display-mappings
+   '((tab-mark ?\t [?› ?\t])
+     (newline-mark ?\u2B90 [?\u23ce])
+     (space-mark ?\u3000 [?\u25a1])))
+  (setq whitespace-space-regexp "\\(\u3000+\\)")
+  :init
+  (global-whitespace-mode))
+#+end_src
 
 *** Winner
- #+begin_src elisp
- (use-package winner :init (winner-mode))
- #+end_src
+#+begin_src elisp
+(use-package winner :init (winner-mode))
+#+end_src
 
 *** Ibuffer
- #+begin_src elisp
- (use-package ibuffer
-   :bind ("C-x C-b" . ibuffer))
- #+end_src
+#+begin_src elisp
+(use-package ibuffer
+  :bind ("C-x C-b" . ibuffer))
+#+end_src
 
 *** Dired
- #+begin_src elisp
- (use-package dired
-   :straight (:type built-in)
-   :bind (:map dired-mode-map
-               ("M-+" . dired-create-empty-file)))
- (use-package dired-x :straight (:type built-in))
- #+end_src
+#+begin_src elisp
+(use-package dired
+  :straight (:type built-in)
+  :bind (:map dired-mode-map
+              ("M-+" . dired-create-empty-file)))
+(use-package dired-x :straight (:type built-in))
+#+end_src
 
 *** Hippie Expand
- #+begin_src elisp
- (use-package hippie-exp
-   :bind ("M-/" . hippie-expand))
- #+end_src
+#+begin_src elisp
+(use-package hippie-exp
+ :bind ("M-/" . hippie-expand))
+#+end_src
 
 *** Tramp
- #+begin_src elisp
- (use-package tramp
-   :custom
-   (tramp-default-method "ssh")
-   (tramp-encoding-shell "/bin/zsh")
-   (tramp-verbose 5))
- #+end_src
+#+begin_src elisp
+(use-package tramp
+  :custom
+  (tramp-default-method "ssh")
+  (tramp-encoding-shell "/bin/zsh")
+  (tramp-verbose 5))
+#+end_src
 
 *** Project Management
- #+begin_src elisp
- (use-package project)
- (use-package projectile)
- #+end_src
+#+begin_src elisp
+(use-package project)
+(use-package projectile
+  :init
+  (projectile-mode +1)
+  :bind-keymap (("s-p" . projectile-command-map)
+                ("C-c p" . projectile-command-map)))
+#+end_src
 
 *** El Doc
 #+begin_src elisp
@@ -367,27 +364,28 @@ Set =utf-8= as preferred encoding:
 
 ** Completions
 *** Which Key
- #+begin_src elisp
- (use-package which-key
-   :demand t
-   :commands which-key-mode
-   :init (which-key-mode)
-   :diminish)
- #+end_src
+#+begin_src elisp
+(use-package which-key
+  :demand t
+  :commands which-key-mode
+  :init (which-key-mode)
+  :diminish)
+#+end_src
+
 *** Dabbrev
- #+begin_src elisp
- (use-package dabbrev
-   :bind (("C-<tab>" . dabbrev-expand)
-          (:map minibuffer-local-map ("C-<tab>" . dabbrev-expand)))
-   :custom
-   (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
- #+end_src
+#+begin_src elisp
+(use-package dabbrev
+    :bind (("C-<tab>" . dabbrev-expand)
+           (:map minibuffer-local-map ("C-<tab>" . dabbrev-expand)))
+    :custom
+(dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
+#+end_src
 
 *** Vertico
- #+begin_src elisp
- (use-package vertico
-   :straight (vertico :files (:defaults "extensions/*")
-                      :includes (vertico-indexed
+#+begin_src elisp
+(use-package vertico
+  :straight (vertico :files (:defaults "extensions/*")
+                     :includes (vertico-indexed
                                 vertico-flat
                                 vertico-grid
                                 vertico-mouse
@@ -397,63 +395,62 @@ Set =utf-8= as preferred encoding:
                                 vertico-reverse
                                 vertico-directory
                                 vertico-multiform
-                                vertico-unobtrusive
-                                ))
-   :commands vertico-mode
-   :bind
-   (:map vertico-map
-         ("?" . minibuffer-completion-help)
-         ("M-RET" . minibuffer-force-complete-and-exit)
-         ("M-TAB" . minibuffer-complete))
-   :init
-   (vertico-mode))
- #+end_src
+                                vertico-unobtrusive))
+  :commands vertico-mode
+  :bind
+  (:map vertico-map
+        ("?" . minibuffer-completion-help)
+        ("M-RET" . minibuffer-force-complete-and-exit)
+        ("M-TAB" . minibuffer-complete))
+  :init
+  (vertico-mode))
+#+end_src
 
 **** Vertico Extensions
 ***** Vertico Directory
- #+begin_src elisp
- (use-package vertico-directory
-   :straight nil
-   :after vertico
-   :bind (:map vertico-map
-               ("RET" . vertico-directory-enter)
-               ("DEL" . vertico-directory-delete-char)
-               ("M-DEL" . vertico-directory-delete-word))
-   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
- #+end_src
+#+begin_src elisp
+(use-package vertico-directory
+  :straight nil
+  :after vertico
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+#+end_src
 
 ***** Vertico Mouse
- #+begin_src elisp
+#+begin_src elisp
  (use-package vertico-mouse
    :straight nil
    :after vertico)
- #+end_src
+#+end_src
 
 *** Orderless
- #+begin_src elisp
- (use-package orderless
-   :demand t
-   :init
-   (setq completion-styles '(substring orderless basic))
-   (setq completion-category-defaults nil)
-   (setq completion-category-overrides '((file (styles basic partial-completion))
-                                         (eglot (styles . (orderless)))))
-   :config
-   (setq orderless-component-separator "[ &]")
-   (setq completion-styles '(orderless)
-           completion-category-overrides '((file (styles basic partial-completion)))))
- #+end_src
+#+begin_src elisp
+(use-package orderless
+  :demand t
+  :init
+  (setq completion-styles '(substring orderless basic))
+  (setq completion-category-defaults nil)
+  (setq completion-category-overrides '((file (styles basic partial-completion))
+                                        (eglot (styles . (orderless)))))
+  :config
+  (setq orderless-component-separator "[ &]")
+  (setq completion-styles '(orderless)
+        completion-category-overrides '((file (styles basic partial-completion)))))
+#+end_src
 
 *** Marginalia
- #+begin_src elisp
- (use-package marginalia
-   :commands marginalia-mode
-   :bind (("M-A" . marginalia-cycle)
-          :map minibuffer-local-map
-          ("M-A" . marginalia-cycle))
-   :init
-   (marginalia-mode))
- #+end_src
+#+begin_src elisp
+(use-package marginalia
+  :commands marginalia-mode
+  :bind (("M-A" . marginalia-cycle)
+         :map minibuffer-local-map
+         ("M-A" . marginalia-cycle))
+  :init
+  (marginalia-mode))
+#+end_src
 
 *** Corfu
 #+begin_src elisp
@@ -488,74 +485,73 @@ Set =utf-8= as preferred encoding:
  #+end_src
 
 *** Cape
- #+begin_src elisp
- (use-package cape
-   :demand t
-   ;; Bind dedicated completion commands
-   ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-   :bind (("M-p p" . completion-at-point) ;; capf
-          ("M-p t" . complete-tag)        ;; etags
-          ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
-          ("M-p h" . cape-history)
-          ("M-p f" . cape-file)
-          ("M-p k" . cape-keyword)
-          ("M-p s" . cape-symbol)
-          ("M-p a" . cape-abbrev)
-          ("M-p i" . cape-ispell)
-          ("M-p l" . cape-line)
-          ;;("M-p w" . cape-dict)
-          ("M-p \\" . cape-tex)
-          ("M-p _" . cape-tex)
-          ("M-p ^" . cape-tex)
-          ("M-p &" . cape-sgml)
-          ;;("M-p r" . cape-rfc1345)
-          )
-   :init
-   ;; Add `completion-at-point-functions', used by `completion-at-point'.
-   (add-to-list 'completion-at-point-functions #'cape-file)
-   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-   (add-to-list 'completion-at-point-functions #'cape-history)
-   (add-to-list 'completion-at-point-functions #'cape-keyword)
-   (add-to-list 'completion-at-point-functions #'cape-tex)
-   (add-to-list 'completion-at-point-functions #'cape-sgml)
-   ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-   (add-to-list 'completion-at-point-functions #'cape-abbrev)
-   (add-to-list 'completion-at-point-functions #'cape-ispell)
-   ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-   (add-to-list 'completion-at-point-functions #'cape-symbol)
-   (add-to-list 'completion-at-point-functions #'cape-line)
- )
- #+end_src
+#+begin_src elisp
+(use-package cape
+  :demand t
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :bind (("M-p p" . completion-at-point) ;; capf
+         ("M-p t" . complete-tag)        ;; etags
+         ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("M-p h" . cape-history)
+         ("M-p f" . cape-file)
+         ("M-p k" . cape-keyword)
+         ("M-p s" . cape-symbol)
+         ("M-p a" . cape-abbrev)
+         ("M-p i" . cape-ispell)
+         ("M-p l" . cape-line)
+         ;;("M-p w" . cape-dict)
+         ("M-p \\" . cape-tex)
+         ("M-p _" . cape-tex)
+         ("M-p ^" . cape-tex)
+         ("M-p &" . cape-sgml)
+         ;;("M-p r" . cape-rfc1345)
+         )
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-history)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-tex)
+  (add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  (add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  (add-to-list 'completion-at-point-functions #'cape-symbol)
+  (add-to-list 'completion-at-point-functions #'cape-line))
+#+end_src
 
 *** Embark
- #+begin_src elisp
- (use-package embark
-   :demand t
-   :commands embark-prefix-help-command
-   :bind
-   (("C-." . embark-act)         ;; pick some comfortable binding
-    ("C-;" . embark-dwim)        ;; good alternative: M-.
-    ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-   :config
-   ;; Hide the mode line of the Embark live/completions buffers
-   (add-to-list 'display-buffer-alist
-                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                  nil
-                  (window-parameters (mode-line-format . none))))
-   :init
-   (setq prefix-help-command #'embark-prefix-help-command))
- #+end_src
+#+begin_src elisp
+(use-package embark
+  :demand t
+  :commands embark-prefix-help-command
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("M-." . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none))))
+  :init
+  (setq prefix-help-command #'embark-prefix-help-command))
+#+end_src
 
 **** =embark-consult=
- #+begin_src elisp
- (use-package embark-consult
-   :after (embark consult)
-   :demand t ; only necessary if you have the hook below
-   ;; if you want to have consult previews as you move around an
-   ;; auto-updating embark collect buffer
-   :hook
-   (embark-collect-mode . consult-preview-at-point-mode))
- #+end_src
+#+begin_src elisp
+(use-package embark-consult
+  :after (embark consult)
+  :demand t ; only necessary if you have the hook below
+  ;; if you want to have consult previews as you move around an
+  ;; auto-updating embark collect buffer
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+#+end_src
 
 *** Consult
 #+begin_src elisp
@@ -658,36 +654,35 @@ Set =utf-8= as preferred encoding:
  #+end_src
 
 **** =consult-eglot=
- #+begin_src elisp
- (use-package consult-eglot
-   :after (consult eglot))
- #+end_src
+#+begin_src elisp
+(use-package consult-eglot
+  :after (consult eglot))
+#+end_src
 
 **** =consult-dir=
- #+begin_src elisp
- (use-package consult-dir
-   :bind (("C-x C-d" . consult-dir)
-          :map minibuffer-local-completion-map
-          ("C-x C-d" . consult-dir)
-          ("C-x C-j" . consult-dir-jump-file)))
- #+end_src
+#+begin_src elisp
+(use-package consult-dir
+  :bind (("C-x C-d" . consult-dir)
+         :map minibuffer-local-completion-map
+         ("C-x C-d" . consult-dir)
+         ("C-x C-j" . consult-dir-jump-file)))
+#+end_src
 
 *** Emacs Completion Configuration
- #+begin_src elisp
- (use-package emacs
-   :init
-   ;; TAB cycle if there are only few candidates
-   (setq completion-cycle-threshold 3)
+#+begin_src elisp
+(use-package emacs
+  :init
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 3)
+  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+  (setq read-extended-command-predicate
+        #'command-completion-default-include-p)
 
-   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
-   ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
-   (setq read-extended-command-predicate
-         #'command-completion-default-include-p)
-
-   ;; Enable indentation+completion using the TAB key.
-   ;; `completion-at-point' is often bound to M-TAB.
-   (setq tab-always-indent 'complete))
- #+end_src
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (setq tab-always-indent 'complete))
+#+end_src
 
 ** Terminal Emulation
 *** Vterm
@@ -767,9 +762,9 @@ Set =utf-8= as preferred encoding:
 ** Software Development
 *** LSP
 **** Eglot
-  #+begin_src elisp
-  (use-package eglot)
-  #+end_src
+#+begin_src elisp
+(use-package eglot)
+#+end_src
 
 *** =paredit=
 #+begin_src elisp
@@ -777,10 +772,20 @@ Set =utf-8= as preferred encoding:
 #+end_src
 
 *** =dart-mode=
- #+begin_src elisp
- (use-package dart-mode
-   :mode "\\.dart\\'")
- #+end_src
+#+begin_src elisp
+(use-package dart-mode
+  :mode "\\.dart\\'")
+#+end_src
+
+*** CSS Mode
+#+begin_src elisp
+(setq css-indent-offset 2)
+#+end_src
+
+*** JS Mode
+#+begin_src elisp
+(setq js-indent-level 2)
+#+end_src
 
 *** Web Mode
 #+begin_src elisp
@@ -804,124 +809,21 @@ Set =utf-8= as preferred encoding:
   (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'"))))
 #+end_src
 
-** LaTex
+*** JSON Mode
 #+begin_src elisp
-(use-package tex-site :straight auctex)
+(use-package json-mode)
 #+end_src
 
-** PDF
+** Calendar
 #+begin_src elisp
-(use-package pdf-tools)
-(use-package pdf-view-restore)
+(use-package calfw)
+(use-package calfw-org)
 #+end_src
 
-** =org-superstar=
+** Org Mode
 #+begin_src elisp
-(use-package org-superstar
-  :hook (org-mode . org-superstar-mode)
-  :init
-  (setq org-superstar-headline-bullets-list '("§" "◆" "▹" "•" "◆" "▹" "•" "◆" "▹" "•" "◆" "▹" "•")))
-#+end_src
-
-** Hyperbole
-#+begin_src elisp :tangle no
-(use-package hyperbole
-  :commands hyperbole-mode
-  :init
-  (hyperbole-mode 1))
-#+end_src
-
-** =anzu=
-#+begin_src elisp
-(use-package anzu
-:diminish
-:commands global-anzu-mode
-:init (global-anzu-mode +1))
-#+end_src
-
-** Text Alignment
-*** Smart Hungry Delete
-#+begin_src elisp
-(use-package smart-hungry-delete
-  :bind (([remap backward-delete-char-untabify] . smart-hungry-delete-backward-char)
-        ([remap delete-backward-char] . smart-hungry-delete-backward-char)
-        ([remap delete-char] . smart-hungry-delete-forward-char))
-  :init (smart-hungry-delete-add-default-hooks))
-#+end_src
-
-*** Interactive Align
-#+begin_src elisp
-(use-package ialign
-  :bind ("C-x l" . ialign))
-#+end_src
-
-** Snippets
-#+begin_src elisp
-(use-package yasnippet
-  :bind
-  ("C-c s" . yas-insert-snippet)
-  :init
-  (yas-global-mode)
-  :config
-  (setq yas-wrap-around-region t)
-  :diminish yas-minor-mode)
-
-(use-package yasnippet-snippets
-  :after yasnippet
-  :config
-  (defvar yasnippet-snippets-directory
-    (concat user-emacs-directory "straight/build/yasnippet-snippets/snippets/"))
-  (yas-reload-all))
-#+end_src
-
-** Olivetti
-Center buffers and text.
-
-#+begin_src elisp
-(use-package olivetti
-  :diminish olivetti-mode
-  :hook ((org-mode . olivetti-mode)
-         (fundamental-mode . olivetti-mode))
-  :config
-  (setq-default olivetti-body-width 83)
-  (remove-hook 'olivetti-mode-on-hook 'visual-line-mode))
-#+end_src
-
-** Org Roam
-#+begin_src elisp
-(use-package org-roam
-  :custom
-  (org-roam-directory (expand-file-name "roam" org-directory))
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
-         ("C-c n g" . org-roam-graph)
-         ("C-c n i" . org-roam-node-insert)
-         ("C-c n c" . org-roam-capture)
-         ;; Dailies
-         ("C-c n j" . org-roam-dailies-capture-today))
-  :config
-  ;; If you're using a vertical completion framework, you might want a more informative completion interface
-  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
-  (org-roam-db-autosync-mode))
-  ;; If using org-roam-protocol
-  ;; (require 'org-roam-protocol))
-#+end_src
-** Visual Undo
-#+begin_src elisp
-(use-package vundo
-  :bind ("C-c z" . vundo)
-  :config
-  (setq vundo-glyph-alist vundo-unicode-symbols))
-#+end_src
-** Matching and Regex
-#+begin_src elisp
-(use-package visual-regexp
-  :config
-  (global-set-key [remap query-replace] 'vr/replace)
-  (global-set-key [remap query-replace-regexp] 'vr/query-replace))
-(use-package visual-regexp-steroids
-  :bind (:map esc-map (("C-r" . vr/isearch-backward)
-                       ("C-s" . vr/isearch-forward))))
+(use-package org-super-agenda
+  :after org-mode)
 #+end_src
 
 * Keybindings
@@ -936,10 +838,16 @@ Center buffers and text.
 * Aesthetics
 For making Emacs look /good/.
 
+** Fringes
 Keep fringes to a minimum:
 
 #+begin_src elisp
 (fringe-mode '(1 . 1))
+#+end_src
+
+** Cursor
+#+begin_src elisp
+(setq-default cursor-type 'bar)
 #+end_src
 
 ** Theme
@@ -949,13 +857,15 @@ Keep fringes to a minimum:
 
 ** Mode Line
 #+begin_src elisp
-(use-package moody
-  :config
-  (setq x-underline-at-descent-line t)
-  (setq moody-mode-line-height 28)
-  (moody-replace-mode-line-buffer-identification)
-  (moody-replace-vc-mode)
-  (moody-replace-eldoc-minibuffer-message-function))
+(use-package smart-mode-line
+  :init
+  (setq sml/theme 'respectful)
+  (setq sml/shorten-directory t)
+  (setq sml/shorten-modes t)
+  (setq sml/name-width 40)
+  (setq sml/mode-width 'full)
+  (setq sml/extra-filler -1)
+  (sml/setup))
 #+end_src
 
 ** Fonts
@@ -968,8 +878,7 @@ Keep fringes to a minimum:
 
 ** Emojify
 #+begin_src elisp
-(use-package emojify
-  :defer t)
+(use-package emojify :defer t)
 #+end_src
 
 ** Prettify Symbols
@@ -983,12 +892,22 @@ Prettify some Greek symbols.
                 ("psi" . ?ψ)))
 #+end_src
 
+** SVG Tags
+#+begin_src elisp
+(use-package svg-tag-mode
+  :init
+  (setq svg-tag-tags '(("TODO" . ((lambda (tag) (svg-tag-make "TODO" :face 'org-todo :inverse t))))
+                       ("CANCELLED" . ((lambda (tag) (svg-tag-make "CANCELLED" :face 'org-cancelled :inverse t))))
+                       ("DONE" . ((lambda (tag) (svg-tag-make "DONE" :face 'org-done :inverse t)))))))
+#+end_src
+
 ** Icons
 #+begin_src elisp
 (use-package all-the-icons
   :defer t
   :commands all-the-icons-install-fonts
   :config
+  (setq all-the-icons-scale-factor 1.1)
   (when (not (member "all-the-icons" (font-family-list)))
     (all-the-icons-install-fonts t)))
 #+end_src
@@ -1008,10 +927,11 @@ Prettify some Greek symbols.
                           (bookmarks . 5)
                           (registers . 5)))
   (setq dashboard-bookmarks-item-format "%s")
+  (setq dashboard-footer-icon "")
   (setq dashboard-footer-messages
-        '("Purity of the heart is to will one thing."
-          "Every good and every perfect gift is from above."
-          "Love shall cover a multitude of sins.")))
+        '("\"Purity of the heart is to will one thing.\""
+          "\"Every good and every perfect gift is from above.\""
+          "\"Love shall cover a multitude of sins.\"")))
 #+end_src
 
 ** Internationalization
@@ -1038,6 +958,12 @@ Prettify some Greek symbols.
   :diminish
   :commands global-page-break-lines-mode
   :init (global-page-break-lines-mode))
+#+end_src
+
+** =diff-hl=
+#+begin_src elisp
+(use-package diff-hl
+  :init (global-diff-hl-mode))
 #+end_src
 
 ** Rainbow Mode
@@ -1069,35 +995,34 @@ For hex colors:
 * Appendix
 ** Glossary
 *** Lexical Binding
-  Lexical binding concerns the valid environment(s) within which a bound
-  variable can be referenced. A lexically scoped variable is bound only
-  under the construct in which it is defined.
+Lexical binding concerns the valid environment(s) within which a bound
+variable can be referenced. A lexically scoped variable is bound only
+under the construct in which it is defined.
 
-  Compare the output of these two code blocks, the former with lexical
-  binding and the latter without:
+Compare the output of these two code blocks, the former with lexical binding and
+the latter without:
+#+begin_src elisp :tangle no :lexical t
+(setq first-day-of-the-universe
+      (let ((there-be-light "There was light."))
+        (lambda () there-be-light)))
+(funcall first-day-of-the-universe)
+#+end_src
 
-  #+begin_src elisp :tangle no :lexical t
-  (setq first-day-of-the-universe
-        (let ((there-be-light "There was light."))
-          (lambda () there-be-light)))
-  (funcall first-day-of-the-universe)
-  #+end_src
+#+begin_src elisp :tangle no :lexical nil
+(setq first-day-of-the-universe
+      (let ((there-be-light "There was (maybe) light."))
+        (lambda () there-be-light)))
+(funcall first-day-of-the-universe)
+;; error→  Symbol's value as variable is void: there-be-light
+#+end_src
 
-  #+begin_src elisp :tangle no :lexical nil
-  (setq first-day-of-the-universe
-        (let ((there-be-light "There was (maybe) light."))
-          (lambda () there-be-light)))
-  (funcall first-day-of-the-universe)
-  ;; error→  Symbol's value as variable is void: there-be-light
-  #+end_src
+Why is the value of =there-be-light= void in the second code block? It is bound
+only within the =let= form.
 
-  Why is the value of =there-be-light= void in the second code block? It is bound
-  only within the =let= form.
+It's kind of like the air inside of a bubble. It will exist as long as
+the bubble maintains its form until the bubble pops. The air will
+still exist but it won't be air inside the bubble anymore. Lexically
+scoped variables are like that too.
 
-  It's kind of like the air inside of a bubble. It will exist as long as
-  the bubble maintains its form until the bubble pops. The air will
-  still exist but it won't be air inside the bubble anymore. Lexically
-  scoped variables are like that too.
-
-  A good question to ask yourself if you want to remember the difference between
-  lexical and dynamic scoping is this: is the variable "globally" accessible?
+A good question to ask yourself if you want to remember the difference between
+lexical and dynamic scoping is this: is the variable "globally" accessible?

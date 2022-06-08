@@ -22,12 +22,11 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 HIST_STAMPS="yyyy-mm-dd"
 
 plugins=(
-    git,
+    git
     poetry
 )
 
 source $ZSH/oh-my-zsh.sh
-
 
 # User configuration
 # environment variables
@@ -51,7 +50,6 @@ export XDG_SESSION_TYPE=wayland
 export QT_QPA_PLATFORM=wayland-egl
 export QT_WAYLAND_FORCE_DPI=physical
 export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
-export QT_QPA_PLATFORMTHEME=qt5ct
 
 # android studio
 # android studio has a weird graphical glitch with sway

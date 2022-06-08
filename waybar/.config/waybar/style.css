@@ -1,31 +1,43 @@
-@define-color primary #463064;
-@define-color primary-light #704997;
+@define-color primary #493664;
+@define-color primary-focused #422f5d;
+@define-color primary-light #9161b3;
+@define-color secondary #789c88;
 @define-color text #f0ecf4;
-@define-color text-muted #c4bccd;
+@define-color text-muted #c0b7ca;
+@define-color background #1b1a1f;
+
 * {
-  font-size: 18px;
-  font-family: monospace;
+  border: none;
+  border-radius: 0;
+  font-size: 16px;
+  font-family: "PP Object Sans", "JetBrains Mono", "Font Awesome 6 Free Solid";
+  min-height: 0;
 }
 
 window#waybar {
-  background: @primary;
   color: @text;
+  background: linear-gradient(0deg, rgba(73,54,100,1) 50%, rgba(83,64,110,1) 100%);
 }
 
-#custom-right-arrow-dark,
-#custom-left-arrow-dark {
-    color: #6d5194;
+tooltip {
+  background: @primary;
+  border: 0.05rem solid @primary-light;
 }
-#custom-right-arrow-light,
-#custom-left-arrow-light {
-  color: #473561;
-  background: @primary-light;
+tooltip label {
+  font-size: 1rem;
+}
+
+.modules-left {
+  padding-left: 1rem;
+}
+
+.modules-right {
+  padding-right: 1rem;
 }
 
 #workspaces,
-#clock.1,
-#clock.2,
-#clock.3,
+#clock.time,
+#clock.date,
 #pulseaudio,
 #network,
 #memory,
@@ -33,28 +45,49 @@ window#waybar {
 #battery,
 #disk,
 #tray {
-  background: @primary-light;
+  margin: 0.1rem 0.2rem;
+  min-width: 5rem;
 }
 
-#clock.2 {
+#network {
+  min-width: 6.5rem;
+}
+
+#clock.time {
+  font-family: "JetBrains Mono";
+  font-size: 1.2rem;
   color: @text;
+  margin-right: 0.67rem;
 }
 
-#clock.1,
-#clock.3 {
+#clock.timezone {
+  font-size: 0.9rem;
   color: @text-muted;
+  margin: 0.5rem 1rem 0.33rem 0;
 }
 
-#tray {
-  padding-right: 6px;
+#clock.date {
+  font-size: 1.2rem;
+}
+
+#clock.timezone,
+#clock.date {
+  color: @text-muted;
 }
 
 #workspaces button {
-  padding: 0 12px;
+  font-weight: bold;
+  margin: 0 0.5rem;
   color: @text-muted;
+  border-radius: 0;
 }
 #workspaces button.focused {
+  background: linear-gradient(180deg, rgba(61,42,88,1) 0%, rgba(90,71,117,1) 100%);
   color: @text;
+  border-radius: 1.2rem;
+  box-shadow: 1rem 1rem @;
+  transition-property: background;
+  transition-duration: 0.1s;
 }
 #workspaces button:hover {
   box-shadow: inherit;
@@ -62,7 +95,10 @@ window#waybar {
 }
 #workspaces button:hover {
   color: #fee97c;
-  background: @primary;
+  background: linear-gradient(180deg, rgba(61,42,88,1) 0%, rgba(90,71,117,1) 100%);
+  border-radius: 1.2rem;
+  transition-property: background;
+  transition-duration: 0.2s;
 }
 
 #pulseaudio,
@@ -71,30 +107,5 @@ window#waybar {
 #cpu,
 #battery,
 #disk {
-  color: #CDBFE0;
-}
-
-/* #pulseaudio { */
-/* 	color: #268bd2; */
-/* } */
-/* #memory { */
-/* 	color: #2aa198; */
-/* } */
-/* #cpu { */
-/* 	color: #6c71c4; */
-/* } */
-/* #battery { */
-/* 	color: #859900; */
-/* } */
-/* #disk { */
-/* 	color: #b58900; */
-/* } */
-
-#clock,
-#pulseaudio,
-#memory,
-#cpu,
-#battery,
-#disk {
-  padding: 0 12px;
+  color: @text-muted;
 }
