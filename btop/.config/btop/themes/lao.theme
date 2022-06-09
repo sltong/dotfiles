@@ -1,0 +1,7 @@
+theme[main_bg]="#19191e"
+theme[main_fg]="#a6abb4"
+theme[hi_fg]="#d2bd76
+theme[selected_bg]="#23222c"
+theme[selected_fg]="#fbfafc"
+theme[title]="#7657a1"
+theme[inactive_fg]="#9b9fa8"

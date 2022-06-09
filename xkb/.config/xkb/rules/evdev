@@ -1,0 +1,4 @@
+! option = symbols
+  custom:prtsc_ralt = +custom(prtsc_ralt)
+
+! include %S/evdev

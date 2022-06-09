@@ -49,7 +49,7 @@ export CHROME_EXECUTABLE="/opt/google/chrome/google-chrome"
 # desktop
 export XDG_SESSION_TYPE=wayland
 export QT_QPA_PLATFORM=wayland-egl
-export QT_WAYLAND_FORCE_DPI=physical
+export QT_WAYLAND_FORCE_DPI=96
 export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
 
 # android studio

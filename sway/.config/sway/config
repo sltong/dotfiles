@@ -37,7 +37,7 @@ input "1267:12440:ELAN1201:00_04F3:3098_Touchpad" {
 input "2821:6582:Asus_Keyboard" {
     # multiple xkb_options
     # https://github.com/swaywm/sway/issues/4152
-    xkb_options "ctrl:swap_lalt_lctl,caps:backspace,shift:both_capslock_cancel,altwin:prtsc_rwin"
+    xkb_options "ctrl:swap_lalt_lctl,caps:backspace,shift:both_capslock_cancel,custom:prtsc_ralt"
 }
 
 # keybindings
@@ -64,16 +64,16 @@ bindsym $mod+Alt+t exec $term
 bindsym $mod+Shift+k kill
 bindsym $mod+Return exec $menu
 
-# Reload the configuration file
-bindsym $mod+Shift+r reload
+# reload sway config
+bindsym $mod+Alt+r reload
 
 # exit sway
-bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
+bindsym $mod+Alt+q exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
 
 # screenshots
 # region to clipboard
 bindsym $mod+Print exec grim -g "$(slurp)" - | wl-copy
-# full
+# full screenshot
 bindsym $mod+Shift+Print exec grim ~/Pictures/screenshots/$(date +%Y-%m-%d_%H-%m-%s).png
 
 # Move your focus around

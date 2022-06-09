@@ -1,0 +1,11 @@
+// This changes the <PRSC> key to become a Super modifier,
+// but it will still produce the PrtSc keysym.
+hidden partial modifier_keys
+xkb_symbols "prtsc_ralt" {
+    replace key <PRSC> {
+        type[Group1] = "ONE_LEVEL",
+        symbols[Group1] = [ Print ],
+        actions[Group1] = [ SetMods(modifiers=Mod4) ]
+    };
+    modifier_map Mod4 { <PRSC> };
+};
