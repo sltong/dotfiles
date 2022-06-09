@@ -24,6 +24,7 @@ HIST_STAMPS="yyyy-mm-dd"
 plugins=(
     git
     poetry
+    safe-paste
 )
 
 source $ZSH/oh-my-zsh.sh

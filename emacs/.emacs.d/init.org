@@ -97,6 +97,7 @@ Enable lexical binding:
 ** Libraries and Utilities
 #+begin_src elisp
 (use-package async
+  :diminish
   :config (dired-async-mode 1))
 (use-package multiple-cursors
   :bind
@@ -249,7 +250,6 @@ Set =utf-8= as preferred encoding:
 (global-so-long-mode 1) ; avoid performance issues with files with long names
 (display-time-mode 1) ; always show the time
 (savehist-mode) ; save point at files
-(global-hl-line-mode +1) ; highlight the current line
 ;;(pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
 #+end_src
 
@@ -350,6 +350,7 @@ Set =utf-8= as preferred encoding:
 (use-package project)
 (use-package projectile
   :init
+  (setq projectile-mode-line-function '(lambda () (format " [%s]" (projectile-project-name))))
   (projectile-mode +1)
   :bind-keymap (("s-p" . projectile-command-map)
                 ("C-c p" . projectile-command-map)))
@@ -363,6 +364,11 @@ Set =utf-8= as preferred encoding:
          (lisp-interaction-mode . turn-on-eldoc-mode)
          (ielm-mode . turn-on-eldoc-mode))
   :diminish)
+#+end_src
+
+*** Man
+#+begin_src elisp
+(setenv "MANWIDTH" "80")
 #+end_src
 
 ** Completions
@@ -700,8 +706,7 @@ Set =utf-8= as preferred encoding:
   (setq vterm-kill-buffer-on-exit t)
   (setq vterm-max-scrollback 4000)
   :init
-  (setq vterm-always-compile-module t)
-  (add-hook 'vterm-mode-hook (lambda () (setq-local global-hl-line-mode nil))))
+  (setq vterm-always-compile-module t))
 #+end_src
 
 *** =multi-vterm=
@@ -829,6 +834,7 @@ Set =utf-8= as preferred encoding:
 #+begin_src elisp
 (use-package org-super-agenda
   :after org-mode)
+(diminish 'org-indent-mode)
 #+end_src
 
 ** Aesthetics
@@ -861,6 +867,7 @@ Keep fringes to a minimum:
   (setq sml/name-width 32)
   (setq sml/mode-width 'full)
   (setq sml/extra-filler -1)
+  (setq sml/directory-truncation-string "")
   (sml/setup))
 #+end_src
 
@@ -990,7 +997,6 @@ For hex colors:
   :diminish rainbow-delimiters-mode)
 #+end_src
 
-
 * Keybindings
 #+begin_src elisp
 (bind-key "C-c c i" 'open-init-org-file)
@@ -1001,7 +1007,6 @@ For hex colors:
 (bind-key "C-c a" 'org-agenda)
 (bind-key "C-h F" 'describe-face)
 #+end_src
-
 
 * Miscellaneous
 #+begin_src elisp

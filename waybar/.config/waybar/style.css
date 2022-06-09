@@ -1,10 +1,12 @@
-@define-color primary #493664;
-@define-color primary-focused #422f5d;
-@define-color primary-light #9161b3;
-@define-color secondary #789c88;
-@define-color text #f0ecf4;
-@define-color text-muted #c0b7ca;
-@define-color background #1b1a1f;
+@define-color primary #694ca4;
+@define-color primary-dark #4e3488;
+@define-color primary-darker #3c2476;
+@define-color primary-light #9675d2;
+@define-color secondary #73bd63;
+@define-color text #fbfafc;
+@define-color text-muted #d6dce8;
+@define-color background #17161c;
+@define-color highlight #d3c962;
 
 * {
   border: none;
@@ -16,12 +18,13 @@
 
 window#waybar {
   color: @text;
-  background: linear-gradient(0deg, rgba(73,54,100,1) 50%, rgba(83,64,110,1) 100%);
+  background: radial-gradient(ellipse farthest-corner at 50% 67%, @primary-dark 0%, @primary-darker 100%);
 }
 
 tooltip {
   background: @primary;
-  border: 0.05rem solid @primary-light;
+  border: 0.05rem solid @primary-dark;
+  border-radius: 1.2rem;
 }
 tooltip label {
   font-size: 1rem;
@@ -79,26 +82,28 @@ tooltip label {
   font-weight: bold;
   margin: 0 0.5rem;
   color: @text-muted;
-  border-radius: 0;
+  border-radius: 1.2rem;
+  transition-property: background, color;
+  transition-duration: 0.3s;
 }
 #workspaces button.focused {
-  background: linear-gradient(180deg, rgba(61,42,88,1) 0%, rgba(90,71,117,1) 100%);
+  background: radial-gradient(ellipse farthest-corner, @primary 0%, @primary-dark 80%, @primary-darker 100%);
   color: @text;
   border-radius: 1.2rem;
   box-shadow: 1rem 1rem @;
   transition-property: background;
-  transition-duration: 0.1s;
+  transition-duration: 0.3s;
 }
 #workspaces button:hover {
   box-shadow: inherit;
   text-shadow: inherit;
 }
 #workspaces button:hover {
-  color: #fee97c;
-  background: linear-gradient(180deg, rgba(61,42,88,1) 0%, rgba(90,71,117,1) 100%);
+  color: @highlight;
+  background: radial-gradient(ellipse farthest-corner, @primary 0%, @primary-dark 80%, @primary-darker 100%);
   border-radius: 1.2rem;
-  transition-property: background;
-  transition-duration: 0.2s;
+  transition-property: background, color;
+  transition-duration: 0.3s;
 }
 
 #pulseaudio,

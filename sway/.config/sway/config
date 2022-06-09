@@ -9,42 +9,42 @@ exec keepassxc
 exec spotify
 exec firefox
 
-### Variables
-#
-# Logo key. Use Mod1 for Alt.
+# mod key
 set $mod Mod4
-# Home row direction keys
+
+# directions
 set $left b
 set $down n
 set $up p
 set $right f
+
+# program variables
 set $editor emacs
 set $term alacritty
+set $browser firefox
 set $menu bemenu-run | xargs swaymsg exec --
 
-### Output configuration
-output eDPI-1 resolution 1920x1080 bg #1A171C solid_color
+# output
+output eDPI-1 resolution 1920x1080
 
-### Input configuration
+# input
 input "1267:12440:ELAN1201:00_04F3:3098_Touchpad" {
     tap enabled
     natural_scroll enabled
     middle_emulation enabled
     pointer_accel 0.1
 }
-# multiple xkb_options
-# https://github.com/swaywm/sway/issues/4152
 input "2821:6582:Asus_Keyboard" {
-    xkb_options "ctrl:swap_lalt_lctl,caps:backspace,shift:both_capslock_cancel"
+    # multiple xkb_options
+    # https://github.com/swaywm/sway/issues/4152
+    xkb_options "ctrl:swap_lalt_lctl,caps:backspace,shift:both_capslock_cancel,altwin:prtsc_rwin"
 }
-# You can get the names of your inputs by running: swaymsg -t get_inputs
-# Read `man 5 sway-input` for more information about this section.
 
-### Key bindings
-# default extras
-bindsym --locked XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
-bindsym --locked XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
-bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+# keybindings
+# default and extra keys
+bindsym --locked XF86AudioLowerVolume exec pulsemixer --change-volume -5
+bindsym --locked XF86AudioRaiseVolume exec pulsemixer --change-volume +5 --max-volume 110
+bindsym --locked $mod+XF86AudioMicMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
 bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 bindsym XF86MonBrightnessDown exec light -U 5
 bindsym XF86MonBrightnessUp exec light -A 5
@@ -57,14 +57,15 @@ bindsym --locked XF86Launch1 exec playerctl play-pause
 bindsym --locked XF86KbdBrightnessDown exec asusctl -p
 bindsym --locked XF86KbdBrightnessUp exec asusctl -n
 
-bindsym $mod+e exec $editor
-bindsym $mod+t exec $term
+bindsym $mod+Alt+f exec $browser
+bindsym $mod+Alt+e exec $editor
+bindsym $mod+Alt+t exec $term
 
 bindsym $mod+Shift+k kill
 bindsym $mod+Return exec $menu
 
 # Reload the configuration file
-bindsym $mod+Shift+c reload
+bindsym $mod+Shift+r reload
 
 # exit sway
 bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -B 'Yes, exit sway' 'swaymsg exit'
@@ -80,17 +81,18 @@ bindsym $mod+$left focus left
 bindsym $mod+$down focus down
 bindsym $mod+$up focus up
 bindsym $mod+$right focus right
-# Or use $mod+[up|down|left|right]
+
 bindsym $mod+Left focus left
 bindsym $mod+Down focus down
 bindsym $mod+Up focus up
 bindsym $mod+Right focus right
-# Move the focused window with the same, but add Shift
+
+# move focused window
 bindsym $mod+Shift+$left move left
 bindsym $mod+Shift+$down move down
 bindsym $mod+Shift+$up move up
 bindsym $mod+Shift+$right move right
-# Ditto, with arrow keys
+
 bindsym $mod+Shift+Left move left
 bindsym $mod+Shift+Down move down
 bindsym $mod+Shift+Up move up
@@ -101,11 +103,12 @@ workspace_layout stacking
 set $ws1 emacs
 
 # default workspaces for programs
-assign [class="Emacs"] workspace number 1
-assign [class="discord"] workspace number 6
-assign [class="Signal"] workspace number 6
-assign [class="Spotify"] workspace number 7
-assign [app_id="org.keepassxc.KeePassXC"] workspace 10
+assign [class="Emacs"]                    workspace number 1
+assign [class="discord"]                  workspace number 6
+assign [class="Signal"]                   workspace number 6
+assign [app_id="telegramdesktop"]         workspace number 6
+assign [class="Spotify"]                  workspace number 7
+assign [app_id="org.keepassxc.KeePassXC"] workspace number 10
 
 # Switch to workspace
 bindsym $mod+1 workspace number 1
@@ -206,7 +209,7 @@ bindsym $mod+r mode "resize"
 set $color #543f72
 set $highlight #a88ad0
 gaps inner 16
-client.focused "#493664" "#493664" "#ffffff" "#b08dc8" "#493664"
+client.focused "#3c2476" "#4e3488" "#fbfafc" "#4e3488" "#3c2476"
 
 # titlebar
 font pango:PP Object Sans 11
