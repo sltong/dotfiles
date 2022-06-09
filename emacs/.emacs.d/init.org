@@ -198,6 +198,8 @@ Enable lexical binding:
 (setq-default kill-do-not-save-duplicates t) ; don't save duplicate entries in kill ring
 (setq-default indent-tabs-mode nil) ; don't indent tabs automatically
 (setq-default auto-revert-interval 3) ; 3 seconds to check autoreverts
+(setq-default display-time-24hr-format t) ; military time
+(setq-default display-time-day-and-date t) ; show date and time
 (setq-default completion-cycle-threshold 3) ; 3 completion candidates
 (setq-default completion-ignore-case t)
 (setq-default echo-keystrokes 0.4)
@@ -247,6 +249,7 @@ Set =utf-8= as preferred encoding:
 (global-so-long-mode 1) ; avoid performance issues with files with long names
 (display-time-mode 1) ; always show the time
 (savehist-mode) ; save point at files
+(global-hl-line-mode +1) ; highlight the current line
 ;;(pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
 #+end_src
 
@@ -697,13 +700,15 @@ Set =utf-8= as preferred encoding:
   (setq vterm-kill-buffer-on-exit t)
   (setq vterm-max-scrollback 4000)
   :init
-  (setq vterm-always-compile-module t))
+  (setq vterm-always-compile-module t)
+  (add-hook 'vterm-mode-hook (lambda () (setq-local global-hl-line-mode nil))))
 #+end_src
 
 *** =multi-vterm=
 #+begin_src elisp
 (use-package multi-vterm
   :init
+  (add-hook 'vterm-mode-hook (lambda () (hl-line-mode -1)))
   :bind
   ("C-c t t" . multi-vterm)
   ("C-c t v" . multi-vterm-dedicated-toggle)
@@ -826,49 +831,40 @@ Set =utf-8= as preferred encoding:
   :after org-mode)
 #+end_src
 
-* Keybindings
-#+begin_src elisp
-(bind-key "C-c c i" 'open-init-org-file)
-(bind-key "C-c c t" 'open-minerva-theme-file)
-(bind-key "C-c c z" 'open-zshrc-file)
-(bind-key "C-<backspace>" (lambda () (interactive (kill-line 0))))
-(bind-key "C-c y" 'yank-from-kill-ring)
-#+end_src
-
-* Aesthetics
+** Aesthetics
 For making Emacs look /good/.
 
-** Fringes
+*** Fringes
 Keep fringes to a minimum:
 
 #+begin_src elisp
 (fringe-mode '(1 . 1))
 #+end_src
 
-** Cursor
+*** Cursor
 #+begin_src elisp
 (setq-default cursor-type 'bar)
 #+end_src
 
-** Theme
+*** Theme
 #+begin_src elisp
 (load-theme 'minerva)
 #+end_src
 
-** Mode Line
+*** Mode Line
 #+begin_src elisp
 (use-package smart-mode-line
   :init
   (setq sml/theme 'respectful)
   (setq sml/shorten-directory t)
   (setq sml/shorten-modes t)
-  (setq sml/name-width 40)
+  (setq sml/name-width 32)
   (setq sml/mode-width 'full)
   (setq sml/extra-filler -1)
   (sml/setup))
 #+end_src
 
-** Fonts
+*** Fonts
 #+begin_src elisp
 (set-face-attribute 'default nil
                     :weight 'regular
@@ -876,12 +872,12 @@ Keep fringes to a minimum:
                     :width 'normal)
 #+end_src
 
-** Emojify
+*** Emojify
 #+begin_src elisp
 (use-package emojify :defer t)
 #+end_src
 
-** Prettify Symbols
+*** Prettify Symbols
 Prettify some Greek symbols.
 #+begin_src elisp
 (setq-default prettify-symbols-alist
@@ -892,7 +888,7 @@ Prettify some Greek symbols.
                 ("psi" . ?ψ)))
 #+end_src
 
-** SVG Tags
+*** SVG Tags
 #+begin_src elisp
 (use-package svg-tag-mode
   :init
@@ -901,7 +897,7 @@ Prettify some Greek symbols.
                        ("DONE" . ((lambda (tag) (svg-tag-make "DONE" :face 'org-done :inverse t)))))))
 #+end_src
 
-** Icons
+*** Icons
 #+begin_src elisp
 (use-package all-the-icons
   :defer t
@@ -912,7 +908,7 @@ Prettify some Greek symbols.
     (all-the-icons-install-fonts t)))
 #+end_src
 
-** Dashboard
+*** Dashboard
 #+begin_src elisp
 (use-package dashboard
   :commands dashboard-setup-startup-hook
@@ -929,12 +925,12 @@ Prettify some Greek symbols.
   (setq dashboard-bookmarks-item-format "%s")
   (setq dashboard-footer-icon "")
   (setq dashboard-footer-messages
-        '("\"Purity of the heart is to will one thing.\""
-          "\"Every good and every perfect gift is from above.\""
-          "\"Love shall cover a multitude of sins.\"")))
+        '("Purity of the heart is to will one thing."
+          "Every good and every perfect gift is from above."
+          "Love shall cover a multitude of sins.")))
 #+end_src
 
-** Internationalization
+*** Internationalization
 #+begin_src elisp
 (use-package pangu-spacing
   :diminish pangu-spacing-mode
@@ -943,7 +939,7 @@ Prettify some Greek symbols.
   :config (setq pangu-spacing-real-insert-separtor t))
 #+end_src
 
-** Indent Guide
+*** Indent Guide
 #+begin_src elisp
 (use-package highlight-indentation
   :commands  highlight-indentation-mode highlight-indentation-current-column-mode
@@ -952,7 +948,7 @@ Prettify some Greek symbols.
   :diminish)
 #+end_src
 
-** Page Break Line
+*** Page Break Line
 #+begin_src elisp
 (use-package page-break-lines
   :diminish
@@ -960,13 +956,22 @@ Prettify some Greek symbols.
   :init (global-page-break-lines-mode))
 #+end_src
 
-** =diff-hl=
+*** =diff-hl=
 #+begin_src elisp
 (use-package diff-hl
   :init (global-diff-hl-mode))
 #+end_src
 
-** Rainbow Mode
+*** Colors
+#+begin_src elisp
+(use-package ct
+  :straight (ct
+             :host github
+             :repo "neeasade/ct.el"
+             :branch "master"))
+#+end_src
+
+*** Rainbow Mode
 For hex colors:
 
 #+begin_src elisp
@@ -976,7 +981,7 @@ For hex colors:
   :diminish)
 #+end_src
 
-** Rainbow Delimiters
+*** Rainbow Delimiters
 #+begin_src elisp
 (use-package rainbow-delimiters
   :commands rainbow-delimiters-mode
@@ -984,6 +989,19 @@ For hex colors:
          (prog-mode . rainbow-delimiters-mode))
   :diminish rainbow-delimiters-mode)
 #+end_src
+
+
+* Keybindings
+#+begin_src elisp
+(bind-key "C-c c i" 'open-init-org-file)
+(bind-key "C-c c t" 'open-minerva-theme-file)
+(bind-key "C-c c z" 'open-zshrc-file)
+(bind-key "C-<backspace>" (lambda () (interactive (kill-line 0))))
+(bind-key "C-c y" 'yank-from-kill-ring)
+(bind-key "C-c a" 'org-agenda)
+(bind-key "C-h F" 'describe-face)
+#+end_src
+
 
 * Miscellaneous
 #+begin_src elisp
