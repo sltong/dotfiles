@@ -2,21 +2,22 @@
 exec --no-startup-id dbus-update-activation-environment --all
 exec swaync
 exec gentoo-pipewire-launcher
+exec emacs
+exec keepassxc
+exec firefox
 exec discord
 exec telegram-desktop
 exec signal-desktop
-exec keepassxc
 exec spotify
-exec firefox
 
 # mod key
 set $mod Mod4
 
 # directions
-set $left b
-set $down n
 set $up p
 set $right f
+set $down n
+set $left b
 
 # program variables
 set $editor emacs
@@ -24,8 +25,13 @@ set $term alacritty
 set $browser firefox
 set $menu bemenu-run | xargs swaymsg exec --
 
+
 # output
-output eDPI-1 resolution 1920x1080
+set $wallpapers_path $HOME/Pictures/wallpapers
+output eDP-1 {
+    resolution 1920x1080@144Hz
+    background $(find $wallpapers_path -type f | shuf -n 1) fill
+}
 
 # input
 input "1267:12440:ELAN1201:00_04F3:3098_Touchpad" {
@@ -43,7 +49,7 @@ input "2821:6582:Asus_Keyboard" {
 # keybindings
 # default and extra keys
 bindsym --locked XF86AudioLowerVolume exec pulsemixer --change-volume -5
-bindsym --locked XF86AudioRaiseVolume exec pulsemixer --change-volume +5 --max-volume 110
+bindsym --locked XF86AudioRaiseVolume exec pulsemixer --change-volume +5 --max-volume 150
 bindsym --locked $mod+XF86AudioMicMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
 bindsym XF86AudioMicMute exec pactl set-source-mute @DEFAULT_SOURCE@ toggle
 bindsym XF86MonBrightnessDown exec light -U 5
@@ -98,16 +104,17 @@ bindsym $mod+Shift+Down move down
 bindsym $mod+Shift+Up move up
 bindsym $mod+Shift+Right move right
 
-# Workspaces:
+# workspaces
 workspace_layout stacking
 set $ws1 emacs
 
 # default workspaces for programs
 assign [class="Emacs"]                    workspace number 1
+assign [app_id="firefox"]                 workspace number 2
 assign [class="discord"]                  workspace number 6
 assign [class="Signal"]                   workspace number 6
 assign [app_id="telegramdesktop"]         workspace number 6
-assign [class="Spotify"]                  workspace number 7
+assign [title="Spotify"]                  workspace number 7
 assign [app_id="org.keepassxc.KeePassXC"] workspace number 10
 
 # Switch to workspace
@@ -132,60 +139,49 @@ bindsym $mod+Shift+7 move container to workspace number 7
 bindsym $mod+Shift+8 move container to workspace number 8
 bindsym $mod+Shift+9 move container to workspace number 9
 bindsym $mod+Shift+0 move container to workspace number 10
-# Note: workspaces can have any name you want, not just numbers.
-# We just use 1-10 as the default.
-#
-# Layout stuff:
-#
-    # You can "split" the current object of your focus with
-    # $mod+b or $mod+v, for horizontal and vertical splits
-    # respectively.
-    bindsym $mod+minus splith
-    bindsym $mod+bar splitv
 
-    # Switch the current container between different layout styles
-    bindsym $mod+Shift+s layout stacking
-    bindsym $mod+Shift+w layout tabbed
-    bindsym $mod+s layout toggle split
+# layout
 
-    # Make the current focus fullscreen
-    bindsym $mod+F11 fullscreen
+bindsym $mod+Shift+h splith
+bindsym $mod+Shift+v splitv
 
-    # Toggle the current focus between tiling and floating mode
-    bindsym $mod+Shift+space floating toggle
+# Switch the current container between different layout styles
+bindsym $mod+Shift+s layout stacking
+bindsym $mod+Shift+w layout tabbed
+bindsym $mod+s layout toggle split
 
-    # Swap focus between the tiling area and the floating area
-    bindsym $mod+space focus mode_toggle
+# Make the current focus fullscreen
+bindsym $mod+Shift+F11 fullscreen
 
-    # Move focus to the parent container
-    bindsym $mod+a focus parent
+# Toggle the current focus between tiling and floating mode
+bindsym $mod+Shift+space floating toggle
 
-    # Drag floating windows by holding down $mod and left mouse button.
-    # Resize them with right mouse button + $mod.
-    # Despite the name, also works for non-floating windows.
-    # Change normal to inverse to use left mouse button for resizing and right
-    # mouse button for dragging.
-    floating_modifier $mod normal
-#
-# Scratchpad:
-#
-    # Sway has a "scratchpad", which is a bag of holding for windows.
-    # You can send windows there and get them back later.
+# Swap focus between the tiling area and the floating area
+bindsym $mod+space focus mode_toggle
 
-    # Move the currently focused window to the scratchpad
-    #bindsym $mod+Shift+minus move scratchpad
+# Move focus to the parent container
+bindsym $mod+a focus parent
 
-    # Show the next scratchpad window or hide the focused scratchpad window.
-    # If there are multiple scratchpad windows, this command cycles through them.
-    #bindsym $mod+s scratchpad show
-#
-# Resizing containers:
-#
+# Drag floating windows by holding down $mod and left mouse button.
+# Resize them with right mouse button + $mod.
+# Despite the name, also works for non-floating windows.
+# Change normal to inverse to use left mouse button for resizing and right
+# mouse button for dragging.
+floating_modifier $mod normal
+
+# scratchpad
+# Sway has a "scratchpad", which is a bag of holding for windows.
+# You can send windows there and get them back later.
+
+# Move the currently focused window to the scratchpad
+#bindsym $mod+minus move scratchpad
+
+# Show the next scratchpad window or hide the focused scratchpad window.
+# If there are multiple scratchpad windows, this command cycles through them.
+#bindsym $mod+minus scratchpad show
+
+# resize containers
 mode "resize" {
-    # left will shrink the containers width
-    # right will grow the containers width
-    # up will shrink the containers height
-    # down will grow the containers height
     bindsym $left resize shrink width 10px
     bindsym $down resize grow height 10px
     bindsym $up resize shrink height 10px
@@ -201,18 +197,31 @@ mode "resize" {
     bindsym Return mode "default"
     bindsym Escape mode "default"
 }
-bindsym $mod+r mode "resize"
+bindsym $mod+Shift+r mode "resize"
 
 # styling
-
 # colors
+set $gnome-schema org.gnome.desktop.interface
+exec_always {
+    gsettings set $gnome-schema gtk-theme Adwaita-dark
+    gsettings set $gnome-schema icon-theme Papirus-Dark
+    gsettings set $gnome-schema cursor-theme Mocu-White-Right
+    gsettings set $gnome-schema font-name 'PP Object Sans,  12'
+}
+seat seat0 xcursor_theme 'Mocu-White-Right' 24
+default_border pixel 2
 set $color #543f72
 set $highlight #a88ad0
 gaps inner 16
 client.focused "#3c2476" "#4e3488" "#fbfafc" "#4e3488" "#3c2476"
 
+#opacity
+set $opacity 0.9
+for_window [class=".*"] opacity $opacity
+for_window [app_id=".*"] opacity $opacity
+
 # titlebar
-font pango:PP Object Sans 11
+font pango:PP Object Sans 12
 title_align center
 
 bar swaybar_command waybar
@@ -226,4 +235,5 @@ exec swayidle -w \
 # sway notification center (swaync)
 bindsym $mod+Alt+n exec swaync-client -t -sw
 
+include ./application_windows
 include /etc/sway/config.d/*

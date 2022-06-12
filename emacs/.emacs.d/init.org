@@ -53,8 +53,12 @@ Enable lexical binding:
 *** Configuration Files and Directories
 #+begin_src elisp
 (defvar config-directory (expand-file-name "~/.config"))
-(defvar lao/sway-config-file (expand-file-name "sway/config" config-directory))
+(defvar lao/sway-file (expand-file-name "sway/config" config-directory))
 (defvar lao/zshrc-file (expand-file-name "~/.zshrc"))
+(defun open-sway-file ()
+  "Open the sway configuration file."
+  (interactive)
+  (find-file lao/sway-file))
 (defun open-zshrc-file ()
   "Open the .zshrc configuration file."
   (interactive)
@@ -907,6 +911,7 @@ Prettify some Greek symbols.
 *** Icons
 #+begin_src elisp
 (use-package all-the-icons
+  :if (display-graphic-p)
   :defer t
   :commands all-the-icons-install-fonts
   :config
@@ -971,6 +976,7 @@ Prettify some Greek symbols.
 
 *** Colors
 #+begin_src elisp
+(use-package kurecolor)
 (use-package ct
   :straight (ct
              :host github
@@ -999,7 +1005,9 @@ For hex colors:
 
 * Keybindings
 #+begin_src elisp
+(bind-key "s-o" 'other-window)
 (bind-key "C-c c i" 'open-init-org-file)
+(bind-key "C-c c s" 'open-sway-file)
 (bind-key "C-c c t" 'open-minerva-theme-file)
 (bind-key "C-c c z" 'open-zshrc-file)
 (bind-key "C-<backspace>" (lambda () (interactive (kill-line 0))))
