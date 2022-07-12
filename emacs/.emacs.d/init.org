@@ -24,10 +24,49 @@ Enable lexical binding:
 ;;; -*- lexical-binding: t -*-
 #+end_src
 
+** Startup Configuration
+#+begin_src elisp
+(defvar file-name-handler-alist-original file-name-handler-alist)
+(setq file-name-handler-alist nil)
+(add-hook 'emacs-startup-hook
+  (lambda ()
+    (setq file-name-handler-alist file-name-handler-alist-original)))
+(add-hook 'emacs-startup-hook
+          (lambda () (setq gc-cons-threshold (* 16 1024 1024)))) ; set `gc-cons-threshold' to
+(setq load-prefer-newer t)
+(setq inhibit-startup-screen t)
+(setq inhibit-startup-echo-area-message user-login-name)
+(setq inhibit-default-init t)
+(setq native-comp-async-report-warnings-errors 'silent)
+(setq-default cursor-in-non-selected-windows nil)
+(setq-default frame-resize-pixelwise t) ; set pixelwise resizing
+(setq highlight-nonselected-windows nil)
+(setq inhibit-compacting-font-caches t)
+(setq initial-major-mode 'fundamental-mode)
+(setq initial-scratch-message nil)
+(setq-default global-auto-revert-non-file-buffers t)
+(setq-default kill-do-not-save-duplicates t) ; don't save duplicate entries in kill ring
+(setq kill-ring-max 500)
+(setq-default auto-revert-interval 3) ; 3 seconds to check autoreverts
+(setq-default echo-keystrokes 0.4)
+(setq-default enable-recursive-minibuffers t)
+(setq-default read-process-output-max (* 2 1024 1024)) ; allow reading 2MB from subprocesses
+(setq-default scroll-preserve-screen-position t)
+(setq-default sentence-end-double-space nil)
+(setq-default indent-tabs-mode nil) ; don't indent tabs automatically
+(setq-default tab-always-indent 'complete) ; indent first, then try to complete at point
+(setq-default tab-width 4)
+(setq-default truncate-lines t) ; never display continuation lines
+(setq-default use-dialog-box nil)
+(setq-default vc-follow-symlinks nil)
+(setq-default large-file-warning-threshold (* 1024 1024 100)) ; no warning until file is 100MB
+(setq use-short-answers t) ; make /yes/ or /no/ choices into /y/ or /n/
+#+end_src
+
 ** Files and Directories
 *** Emacs Files and Directories
 #+begin_src elisp
-(defvar dotfiles-directory (expand-file-name "~/.dotfiles"))
+(defconst dotfiles-directory (expand-file-name "~/.dotfiles"))
 (setq user-emacs-directory (expand-file-name "emacs/.emacs.d/" dotfiles-directory))
 (defvar snippets-directory
   (expand-file-name "snippets" user-emacs-directory))
@@ -52,44 +91,49 @@ Enable lexical binding:
 
 *** Configuration Files and Directories
 #+begin_src elisp
-(defvar config-directory (expand-file-name "~/.config"))
-(defvar lao/sway-file (expand-file-name "sway/config" config-directory))
-(defvar lao/zshrc-file (expand-file-name "~/.zshrc"))
-(defun open-sway-file ()
+(defconst config-directory (expand-file-name "~/.config"))
+(defvar lao/sway-config (expand-file-name "sway/config" config-directory))
+(defvar lao/waybar-config (expand-file-name "waybar/config" config-directory))
+(defvar lao/zshrc-config (expand-file-name "~/.zshrc"))
+(defvar lao/zshenv-file (expand-file-name "~/.zshenv"))
+(defun open-sway-config ()
   "Open the sway configuration file."
   (interactive)
-  (find-file lao/sway-file))
-(defun open-zshrc-file ()
+  (find-file lao/sway-config))
+(defun open-waybar-config ()
+  "Open the waybar configuration file."
+  (interactive)
+  (find-file lao/waybar-config))
+(defun open-zshrc-config ()
   "Open the .zshrc configuration file."
   (interactive)
-  (find-file lao/zshrc-file))
+  (find-file lao/zshrc-config))
 #+end_src
 
 ** Package Management
 *** Package Archives
 #+begin_src elisp
 (require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 #+end_src
 
 *** =use-package= and =straight= Setup
 #+begin_src elisp
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+(setq straight-use-package-by-default t
+      straight-check-for-modifications nil)
+(unless (featurep 'straight)
+  (defvar bootstrap-version)
+  (let ((bootstrap-file (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+        (bootstrap-version 5))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage)))
 (straight-use-package 'use-package)
-(use-package straight
-  :config
-  (setq straight-use-package-by-default t))
 #+end_src
 
 *** Local Packages
@@ -112,7 +156,17 @@ Enable lexical binding:
 (use-package goto-line-preview
   :bind
   ("M-g M-g" . goto-line-preview))
-(use-package tiny)
+(use-package tiny :defer t)
+(use-package gcmh
+  :straight (gcmh :type git :host gitlab :repo "koral/gcmh"))
+#+end_src
+
+*** Startup Metrics
+#+begin_src elisp
+(use-package esup
+  :ensure t
+  ;; To use MELPA Stable use ":pin melpa-stable",
+  :pin melpa)
 #+end_src
 
 ** Org Mode Configuration
@@ -126,8 +180,7 @@ Enable lexical binding:
   (setq org-directory "~/org")
   (setq org-agenda-files (expand-file-name "todo/agendas.org" org-directory))
   (setq org-todo-keywords
-        '((sequence "TODO" "IN-PROGRESS" "WAITING"
-                    "|" "DONE" "CANCELLED")))
+        '((sequence "TODO" "IN-PROGRESS" "WAITING" "|" "DONE" "CANCELLED")))
   (setq org-tag-alist '(("@work" . ?w)
                         ("@home" . ?h)
                         ("studygarden" . ?s)))
@@ -136,6 +189,7 @@ Enable lexical binding:
   (setq org-display-custom-times t)
   (setq org-adapt-indentation t) ; align content with headlines
   (setq org-edit-src-content-indentation 0) ; align code blocks with markers
+  (setq org-indent-indentation-per-level 1)
   (setq org-src-tab-acts-natively t)
   (setq org-src-fontify-natively t)
   (setq org-log-done t)
@@ -147,7 +201,7 @@ Enable lexical binding:
 
 ** User and System Information
 #+begin_src elisp
-(defvar my-laptop-p (equal (system-name) "lamb"))
+(defconst my-laptop-p (equal (system-name) "lamb"))
 (setq user-full-name "Lao Tong"
       user-mail-address "lao.s.t@pm.me")
 #+end_src
@@ -169,7 +223,7 @@ Enable lexical binding:
 (setq delete-old-versions -1)
 (setq version-control t)
 (setq vc-make-backup-files t)
-(defvar emacs-autosave-directory
+(defconst emacs-autosave-directory
   (concat user-emacs-directory "auto-save/"))
 (setq backup-directory-alist
       `((".*" . ,emacs-autosave-directory)))
@@ -186,74 +240,23 @@ Enable lexical binding:
 #+end_src
 
 ** Environment Variables
-   Get environment variables from shell with =exec-path-from-shell=:
-
-   #+begin_src elisp
-   (use-package exec-path-from-shell
-     :defer nil
-     :commands exec-path-from-shell-initialize
-     :if (memq window-system '(mac ns))
-     :config
-     (exec-path-from-shell-initialize))
-   #+end_src
-
-** Default Configurations
-#+begin_src elisp
-(setq-default global-auto-revert-non-file-buffers t)
-(setq-default kill-do-not-save-duplicates t) ; don't save duplicate entries in kill ring
-(setq-default indent-tabs-mode nil) ; don't indent tabs automatically
-(setq-default auto-revert-interval 3) ; 3 seconds to check autoreverts
-(setq-default display-time-24hr-format t) ; military time
-(setq-default display-time-day-and-date t) ; show date and time
-(setq-default completion-cycle-threshold 3) ; 3 completion candidates
-(setq-default completion-ignore-case t)
-(setq-default echo-keystrokes 0.4)
-(setq-default enable-recursive-minibuffers t)
-(setq-default fill-column 80)
-(setq-default frame-resize-pixelwise t) ; set pixelwise resizing
-(setq-default initial-major-mode 'org-mode) ; org mode for new buffers
-(setq-default initial-scratch-message "") ; blank scratch buffers
-(setq-default large-file-warning-threshold (* 1024 1024 1024 2)) ; no warning until file is 2GB
-(setq-default read-buffer-completion-ignore-case t)
-(setq-default read-file-name-completion-ignore-case t)
-(setq-default read-process-output-max (* 1024 1024)) ; allow reading 2MB from subprocesses
-(setq-default scroll-preserve-screen-position t)
-(setq-default sentence-end-double-space nil)
-(setq-default tab-always-indent 'complete) ; indent first, then try to complete at point
-(setq-default tab-width 4)
-(setq-default truncate-lines t) ; never display continuation lines
-(setq-default use-dialog-box nil)
-(setq-default vc-follow-symlinks nil)
-(setq-default x-stretch-cursor t) ; stretch cursor to size of glyph under it
-(setq-default x-gtk-resize-child-frames t)
-(setq native-comp-async-report-warnings-errors 'silent)
-(fset 'yes-or-no-p 'y-or-n-p) ; make /yes/ or /no/ choices into /y/ or /n/
-#+end_src
-
-*** Mode Line
-#+begin_src elisp
-(setq-default column-number-mode t
-              mode-line-position-column-format '(" %l:%c")
-              mode-line-position-column-line-format '(" %l:%c"))
-#+end_src
-
-*** UTF-8 Encoding
-Set =utf-8= as preferred encoding:
+Get environment variables from shell with =exec-path-from-shell=:
 
 #+begin_src elisp
-(set-language-environment "UTF-8")
-(prefer-coding-system       'utf-8)
-(set-default-coding-systems 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
+(use-package exec-path-from-shell
+  :commands exec-path-from-shell-initialize
+  :if (memq window-system '(mac ns))
+  :config
+  (exec-path-from-shell-initialize))
 #+end_src
 
 ** Initial Modes
 #+begin_src elisp
-(global-auto-revert-mode 1) ; always revert buffers when a file changes
-(global-so-long-mode 1) ; avoid performance issues with files with long names
-(display-time-mode 1) ; always show the time
+(global-auto-revert-mode t) ; always revert buffers when a file changes
+(global-so-long-mode t) ; avoid performance issues with files with long names
+(display-time-mode t) ; always show the time
 (savehist-mode) ; save point at files
+(delete-selection-mode t)
 ;;(pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
 #+end_src
 
@@ -289,9 +292,10 @@ Set =utf-8= as preferred encoding:
   (recentf-mode))
 #+end_src
 
-*** Diminish
+*** Diminish and Delight
 #+begin_src elisp
 (use-package diminish)
+(use-package delight)
 #+end_src
 
 *** Whitespace
@@ -316,7 +320,8 @@ Set =utf-8= as preferred encoding:
 
 *** Winner
 #+begin_src elisp
-(use-package winner :init (winner-mode))
+(use-package winner
+  :init (winner-mode))
 #+end_src
 
 *** Ibuffer
@@ -330,44 +335,52 @@ Set =utf-8= as preferred encoding:
 (use-package dired
   :straight (:type built-in)
   :bind (:map dired-mode-map
-              ("M-+" . dired-create-empty-file)))
-(use-package dired-x :straight (:type built-in))
+              ("M-+" . dired-create-empty-file))
+  :config
+  (setq dired-listing-switches "-ahl"))
+(use-package dired-x
+  :straight (:type built-in)
+  :after dired)
 #+end_src
 
 *** Hippie Expand
 #+begin_src elisp
 (use-package hippie-exp
- :bind ("M-/" . hippie-expand))
+  :straight (:type built-in)
+  :bind ("M-/" . hippie-expand))
+#+end_src
+
+*** Electric Pair Mode
+#+begin_src elisp
+(electric-pair-mode)
 #+end_src
 
 *** Tramp
 #+begin_src elisp
 (use-package tramp
+  :defer t
   :custom
   (tramp-default-method "ssh")
   (tramp-encoding-shell "/bin/zsh")
   (tramp-verbose 5))
 #+end_src
 
-*** Project Management
+*** Flymake
 #+begin_src elisp
-(use-package project)
-(use-package projectile
-  :init
-  (setq projectile-mode-line-function '(lambda () (format " [%s]" (projectile-project-name))))
-  (projectile-mode +1)
-  :bind-keymap (("s-p" . projectile-command-map)
-                ("C-c p" . projectile-command-map)))
+(use-package flymake
+  :straight (:type built-in)
+  :defer t)
 #+end_src
 
 *** El Doc
 #+begin_src elisp
 (use-package eldoc
+  :straight (:type built-in)
+  :diminish
   :commands turn-on-eldoc-mode
   :hook ((emacs-lisp-mode . turn-on-eldoc-mode)
          (lisp-interaction-mode . turn-on-eldoc-mode)
-         (ielm-mode . turn-on-eldoc-mode))
-  :diminish)
+         (ielm-mode . turn-on-eldoc-mode)))
 #+end_src
 
 *** Man
@@ -375,11 +388,33 @@ Set =utf-8= as preferred encoding:
 (setenv "MANWIDTH" "80")
 #+end_src
 
+*** EWW
+#+begin_src elisp
+(use-package eww
+  :straight (:type built-in)
+  :config
+  (setq shr-use-fonts nil)
+  (setq shr-use-colors nil))
+#+end_src
+
+*** URL
+#+begin_src elisp
+(use-package url
+:straight (:type built-in))
+#+end_src
+
 ** Completions
+#+begin_src elisp
+(setq completion-cycle-threshold 3 ; 3 completion candidates
+      completion-ignore-case t
+      read-buffer-completion-ignore-case t
+      read-file-name-completion-ignore-case t)
+#+end_src
+
 *** Which Key
 #+begin_src elisp
 (use-package which-key
-  :demand t
+  :defer t
   :commands which-key-mode
   :init (which-key-mode)
   :diminish)
@@ -392,178 +427,6 @@ Set =utf-8= as preferred encoding:
            (:map minibuffer-local-map ("C-<tab>" . dabbrev-expand)))
     :custom
 (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
-#+end_src
-
-*** Vertico
-#+begin_src elisp
-(use-package vertico
-  :straight (vertico :files (:defaults "extensions/*")
-                     :includes (vertico-indexed
-                                vertico-flat
-                                vertico-grid
-                                vertico-mouse
-                                vertico-quick
-                                vertico-buffer
-                                vertico-repeat
-                                vertico-reverse
-                                vertico-directory
-                                vertico-multiform
-                                vertico-unobtrusive))
-  :commands vertico-mode
-  :bind
-  (:map vertico-map
-        ("?" . minibuffer-completion-help)
-        ("M-RET" . minibuffer-force-complete-and-exit)
-        ("M-TAB" . minibuffer-complete))
-  :init
-  (vertico-mode))
-#+end_src
-
-**** Vertico Extensions
-***** Vertico Directory
-#+begin_src elisp
-(use-package vertico-directory
-  :straight nil
-  :after vertico
-  :bind (:map vertico-map
-              ("RET" . vertico-directory-enter)
-              ("DEL" . vertico-directory-delete-char)
-              ("M-DEL" . vertico-directory-delete-word))
-  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
-#+end_src
-
-***** Vertico Mouse
-#+begin_src elisp
- (use-package vertico-mouse
-   :straight nil
-   :after vertico)
-#+end_src
-
-*** Orderless
-#+begin_src elisp
-(use-package orderless
-  :demand t
-  :init
-  (setq completion-styles '(substring orderless basic))
-  (setq completion-category-defaults nil)
-  (setq completion-category-overrides '((file (styles basic partial-completion))
-                                        (eglot (styles . (orderless)))))
-  :config
-  (setq orderless-component-separator "[ &]")
-  (setq completion-styles '(orderless)
-        completion-category-overrides '((file (styles basic partial-completion)))))
-#+end_src
-
-*** Marginalia
-#+begin_src elisp
-(use-package marginalia
-  :commands marginalia-mode
-  :bind (("M-A" . marginalia-cycle)
-         :map minibuffer-local-map
-         ("M-A" . marginalia-cycle))
-  :init
-  (marginalia-mode))
-#+end_src
-
-*** Corfu
-#+begin_src elisp
-(use-package corfu
-  :demand t
-  :config
-  (defun corfu-enable-in-minibuffer ()
-    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
-    (when (where-is-internal #'completion-at-point (list (current-local-map)))
-      ;; (setq-local corfu-auto nil) Enable/disable auto completion
-      (corfu-mode 1)))
-  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
-  (defun corfu-enable-always-in-minibuffer ()
-    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
-    (unless (or (bound-and-true-p mct--active)
-                (bound-and-true-p vertico--input))
-      (corfu-mode 1)))
-  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
-  :custom
-  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  (corfu-auto t)                 ;; Enable auto completion
-  (corfu-preselect-first nil)
-  (corfu-separator ?\s)          ;; Orderless field separator
-  :bind
-  ;; Configure SPC for separator insertion
-  (:map corfu-map
-        ("SPC" . corfu-insert-separator)
-        ("M-n" . corfu-next)
-        ("M-p" . corfu-previous))
-  :init
-  (global-corfu-mode))
- #+end_src
-
-*** Cape
-#+begin_src elisp
-(use-package cape
-  :demand t
-  ;; Bind dedicated completion commands
-  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-  :bind (("M-p p" . completion-at-point) ;; capf
-         ("M-p t" . complete-tag)        ;; etags
-         ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
-         ("M-p h" . cape-history)
-         ("M-p f" . cape-file)
-         ("M-p k" . cape-keyword)
-         ("M-p s" . cape-symbol)
-         ("M-p a" . cape-abbrev)
-         ("M-p i" . cape-ispell)
-         ("M-p l" . cape-line)
-         ;;("M-p w" . cape-dict)
-         ("M-p \\" . cape-tex)
-         ("M-p _" . cape-tex)
-         ("M-p ^" . cape-tex)
-         ("M-p &" . cape-sgml)
-         ;;("M-p r" . cape-rfc1345)
-         )
-  :init
-  ;; Add `completion-at-point-functions', used by `completion-at-point'.
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-history)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  (add-to-list 'completion-at-point-functions #'cape-tex)
-  (add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  (add-to-list 'completion-at-point-functions #'cape-abbrev)
-  (add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  (add-to-list 'completion-at-point-functions #'cape-symbol)
-  (add-to-list 'completion-at-point-functions #'cape-line))
-#+end_src
-
-*** Embark
-#+begin_src elisp
-(use-package embark
-  :demand t
-  :commands embark-prefix-help-command
-  :bind
-  (("C-." . embark-act)         ;; pick some comfortable binding
-   ("M-." . embark-dwim)        ;; good alternative: M-.
-   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-  :config
-  ;; Hide the mode line of the Embark live/completions buffers
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none))))
-  :init
-  (setq prefix-help-command #'embark-prefix-help-command))
-#+end_src
-
-**** =embark-consult=
-#+begin_src elisp
-(use-package embark-consult
-  :after (embark consult)
-  :demand t ; only necessary if you have the hook below
-  ;; if you want to have consult previews as you move around an
-  ;; auto-updating embark collect buffer
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
 #+end_src
 
 *** Consult
@@ -658,13 +521,19 @@ Set =utf-8= as preferred encoding:
    ;; Optionally configure the narrowing key.
    ;; Both < and C-+ work reasonably well.
    (setq consult-narrow-key "<") ;; (kbd "C-+")
+   (autoload 'projectile-project-root "projectile")
+   (setq consult-project-function (lambda (_) (projectile-project-root))))
+#+end_src
 
-   ;; Optionally make narrowing help available in the minibuffer.
-   ;; You may want to use `embark-prefix-help-command' or which-key instead.
-   ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
-   (setq consult-project-function #'consult--default-project--function)
-   )
- #+end_src
+**** =consult-dir=
+#+begin_src elisp
+(use-package consult-dir
+  :after consult
+  :bind (("C-x C-d" . consult-dir)
+         :map minibuffer-local-completion-map
+         ("C-x C-d" . consult-dir)
+         ("C-x C-j" . consult-dir-jump-file)))
+#+end_src
 
 **** =consult-eglot=
 #+begin_src elisp
@@ -672,14 +541,117 @@ Set =utf-8= as preferred encoding:
   :after (consult eglot))
 #+end_src
 
-**** =consult-dir=
+**** =consult-projectile=
 #+begin_src elisp
-(use-package consult-dir
-  :bind (("C-x C-d" . consult-dir)
-         :map minibuffer-local-completion-map
-         ("C-x C-d" . consult-dir)
-         ("C-x C-j" . consult-dir-jump-file)))
+(use-package consult-projectile
+  :after (consult projectile))
 #+end_src
+
+*** Vertico
+#+begin_src elisp
+(use-package vertico
+  :straight (vertico :files (:defaults "extensions/*")
+                     :includes (vertico-indexed
+                                vertico-flat
+                                vertico-grid
+                                vertico-mouse
+                                vertico-quick
+                                vertico-buffer
+                                vertico-repeat
+                                vertico-reverse
+                                vertico-directory
+                                vertico-multiform
+                                vertico-unobtrusive))
+  :commands vertico-mode
+  :bind
+  (:map vertico-map
+        ("?" . minibuffer-completion-help)
+        ("M-RET" . minibuffer-force-complete-and-exit)
+        ("M-TAB" . minibuffer-complete))
+  :init
+  (vertico-mode))
+#+end_src
+
+**** Vertico Extensions
+***** Vertico Directory
+#+begin_src elisp
+(use-package vertico-directory
+  :straight nil
+  :after vertico
+  :bind (:map vertico-map
+              ("RET" . vertico-directory-enter)
+              ("DEL" . vertico-directory-delete-char)
+              ("M-DEL" . vertico-directory-delete-word))
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+#+end_src
+
+***** Vertico Mouse
+#+begin_src elisp
+ (use-package vertico-mouse
+   :straight nil
+   :after vertico)
+#+end_src
+
+*** Orderless
+#+begin_src elisp
+(use-package orderless
+  :demand t
+  :init
+  (setq completion-styles '(substring orderless basic))
+  (setq completion-category-defaults nil)
+  (setq completion-category-overrides '((file (styles basic partial-completion))
+                                        (eglot (styles . (orderless)))))
+  :config
+  (setq orderless-component-separator "[ &]")
+  (setq completion-styles '(orderless)
+        completion-category-overrides '((file (styles basic partial-completion)))))
+#+end_src
+
+*** Marginalia
+#+begin_src elisp
+(use-package marginalia
+  :defer t
+  :commands marginalia-mode
+  :bind (("M-A" . marginalia-cycle)
+         :map minibuffer-local-map
+         ("M-A" . marginalia-cycle))
+  :init (marginalia-mode)
+  :config
+  (setq marginalia-field-width 100))
+#+end_src
+
+*** Corfu
+#+begin_src elisp
+(use-package corfu
+  :demand t
+  :config
+  (defun corfu-enable-in-minibuffer ()
+    "Enable Corfu in the minibuffer if `completion-at-point' is bound."
+    (when (where-is-internal #'completion-at-point (list (current-local-map)))
+      ;; (setq-local corfu-auto nil) Enable/disable auto completion
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-in-minibuffer)
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active)
+                (bound-and-true-p vertico--input))
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
+  (corfu-preselect-first nil)
+  (corfu-separator ?\s)          ;; Orderless field separator
+  :bind
+  ;; Configure SPC for separator insertion
+  (:map corfu-map
+        ("SPC" . corfu-insert-separator)
+        ("M-n" . corfu-next)
+        ("M-p" . corfu-previous))
+  :init
+  (global-corfu-mode))
+ #+end_src
+
 
 *** Emacs Completion Configuration
 #+begin_src elisp
@@ -697,13 +669,64 @@ Set =utf-8= as preferred encoding:
   (setq tab-always-indent 'complete))
 #+end_src
 
+** Search, Pattern Matching, and Regular Expressions
+*** =anzu=
+#+begin_src elisp
+(use-package anzu
+  :diminish
+  :config
+  (global-anzu-mode +1))
+
+#+end_src
+
+*** =visual-regexp=
+#+begin_src elisp
+(use-package visual-regexp
+  :bind (("C-c r" . vr/replace)
+         ("C-c q" . vr/query-replace)
+         ("M-%" . vr/query-replace)
+         ("C-c m" . vr/mc-mark)))
+(use-package visual-regexp-steroids
+  :bind (:map esc-map
+              ("C-r" . vr/isearch-backward)
+              ("C-s" . vr/isearch-forward)))
+#+end_src
+
+*** ripgrep
+#+begin_src elisp
+(use-package rg :defer t)
+#+end_src
+
+** Selection
+*** =multiple-cursors=
+#+begin_src elisp
+(use-package multiple-cursors
+  :bind (("C-S-c C-S-c" . mc/edit-lines)
+         ("C->"         . mc/mark-next-like-this)
+         ("C-<"         . mc/mark-previous-like-this)
+         ("C-c C-<"     . mc/mark-all-like-this)))
+#+end_src
+
+** Undo
+#+begin_src elisp
+(use-package undo-tree
+  :diminish
+  :init
+  (global-undo-tree-mode))
+#+end_src
+
+** Snippets
+#+begin_src elisp
+(use-package yasnippet :defer t)
+#+end_src
+
 ** Terminal Emulation
 *** Vterm
 #+begin_src elisp
 (use-package vterm
   :bind
   (:map vterm-mode-map
-        ("C-q" . vterm-send-next-key))
+        ("C-t" . vterm-send-next-key))
   :config
   (setq vterm-timer-delay 0.01)
   (setq vterm-copy-exclude-prompt t)
@@ -765,24 +788,50 @@ Set =utf-8= as preferred encoding:
 
 ** Magit
 #+begin_src elisp
-(use-package magit)
+(use-package magit :defer t)
 #+end_src
 
 *** =magit-todos=
 #+begin_src elisp
-(use-package magit-todos)
+(use-package magit-todos :after magit)
+#+end_src
+
+** Project Management
+#+begin_src elisp
+(use-package projectile
+  :diminish
+  :init
+  (setq projectile-mode-line-function '(lambda () (format " [%s]" (projectile-project-name))))
+  (projectile-mode +1)
+  :bind-keymap (("s-p" . projectile-command-map)
+                ("C-c p" . projectile-command-map)))
 #+end_src
 
 ** Software Development
+*** EditorConfig
+#+begin_src elisp
+(use-package editorconfig
+  :diminish
+  :config
+  (editorconfig-mode 1))
+#+end_src
+
 *** LSP
 **** Eglot
 #+begin_src elisp
-(use-package eglot)
+(use-package eglot
+  :defer t)
+#+end_src
+
+*** Docker
+#+begin_src elisp
+(use-package docker
+  :bind ("C-c d" . docker))
 #+end_src
 
 *** =paredit=
 #+begin_src elisp
-(use-package paredit :init (enable-paredit-mode))
+(use-package paredit)
 #+end_src
 
 *** =dart-mode=
@@ -825,24 +874,131 @@ Set =utf-8= as preferred encoding:
 
 *** JSON Mode
 #+begin_src elisp
-(use-package json-mode)
+(use-package json-mode :defer t)
+#+end_src
+
+*** YAML Mode
+#+begin_src elisp
+(use-package yaml-mode :defer t)
+#+end_src
+
+*** Python
+#+begin_src elisp
+(use-package python
+  :defer t
+  :straight (:type built-in)
+  :delight (python-mode "py")
+  :config
+  (setq python-indent-guess-indent-offset nil))
+#+end_src
+
+**** Elpy
+#+begin_src elisp
+(use-package elpy
+  :defer t
+  :init
+  (elpy-enable))
+#+end_src
+
+**** Black
+#+begin_src elisp
+(use-package python-black
+  :after python
+  :hook (python-mode . python-black-on-save-mode-enable-dwim))
 #+end_src
 
 ** Calendar
 #+begin_src elisp
-(use-package calfw)
-(use-package calfw-org)
+(use-package calfw :defer t)
+(use-package calfw-org :after (calfw org))
 #+end_src
 
 ** Org Mode
+*** Org Super Agenda
 #+begin_src elisp
 (use-package org-super-agenda
-  :after org-mode)
-(diminish 'org-indent-mode)
+  :after org-mode
+  :hook (org-agenda-mode . org-super-agenda-mode)
+  :config
+  (let ((org-super-agenda-groups
+       '((:name "Today"  ; Optionally specify section name
+                :time-grid t  ; Items that appear on the time grid
+                :todo "TODAY")  ; Items that have this TODO keyword
+         (:name "Important"
+                ;; Single arguments given alone
+                :tag "bills"
+                :priority "A")
+         ;; Set order of multiple groups at once
+         (:order-multi (2 (:name "Shopping in town"
+                                 ;; Boolean AND group matches items that match all subgroups
+                                 :and (:tag "shopping" :tag "@town"))
+                          (:name "Food-related"
+                                 ;; Multiple args given in list with implicit OR
+                                 :tag ("food" "dinner"))
+                          (:name "Personal"
+                                 :habit t
+                                 :tag "personal")
+                          (:name "Space-related (non-moon-or-planet-related)"
+                                 ;; Regexps match case-insensitively on the entire entry
+                                 :and (:regexp ("space" "NASA")
+                                               ;; Boolean NOT also has implicit OR between selectors
+                                               :not (:regexp "moon" :tag "planet")))))
+         ;; Groups supply their own section names when none are given
+         (:todo "WAITING" :order 8)  ; Set order of this section
+         (:todo ("SOMEDAY" "TO-READ" "CHECK" "TO-WATCH" "WATCHING")
+                ;; Show this group at the end of the agenda (since it has the
+                ;; highest number). If you specified this group last, items
+                ;; with these todo keywords that e.g. have priority A would be
+                ;; displayed in that group instead, because items are grouped
+                ;; out in the order the groups are listed.
+                :order 9)
+         (:priority<= "B"
+                      ;; Show this section after "Today" and "Important", because
+                      ;; their order is unspecified, defaulting to 0. Sections
+                      ;; are displayed lowest-number-first.
+                      :order 1)
+         ;; After the last group, the agenda will display items that didn't
+         ;; match any of these groups, with the default order position of 99
+         )))
+    (org-agenda nil "a")))
+(use-package org-indent
+  :straight (:type built-in)
+  :defer t
+  :config
+  (add-hook 'org-indent-mode-hook (lambda () (diminish 'org-indent-mode))))
+#+end_src
+
+*** Org CalDAV
+#+begin_src elisp
+(use-package org-caldav
+  :defer t
+  :after org-mode
+  :config
+  (setq org-caldav-url "https://next.dao/remote.php/dav/calendars/lao"
+        org-caldav-calendar-id "org"
+        org-caldav-inbox (expand-file-name "calendar/inbox.org" org-directory)
+        org-caldav-files `(,(expand-file-name "todo/todo.org" org-directory))))
 #+end_src
 
 ** Aesthetics
 For making Emacs look /good/.
+
+#+begin_src elisp
+(setq x-stretch-cursor t ; stretch cursor to size of glyph under it
+      x-gtk-resize-child-frames t)
+#+end_src
+
+*** Fonts
+#+begin_src elisp
+(set-face-font 'fixed-pitch-serif "Source Code Pro Medium")
+(add-to-list 'default-frame-alist '(font . "JetBrains Mono"))
+#+end_src
+
+*** Date and Time
+#+begin_src elisp
+(setq display-time-24hr-format t) ; military time
+(setq display-time-day-and-date t) ; show date and time
+#+end_src
 
 *** Fringes
 Keep fringes to a minimum:
@@ -851,21 +1007,38 @@ Keep fringes to a minimum:
 (fringe-mode '(1 . 1))
 #+end_src
 
-*** Cursor
+*** Fill Column
 #+begin_src elisp
-(setq-default cursor-type 'bar)
+(setq-default fill-column 80)
 #+end_src
 
-*** Theme
+*** Cursor
 #+begin_src elisp
-(load-theme 'minerva)
+(setq cursor-type 'box)
+(setq blink-cursor-mode nil)
 #+end_src
 
 *** Mode Line
 #+begin_src elisp
+(setq column-number-mode t
+      display-time-default-load-average nil)
+(setq mode-line-format '(("%e"
+                          mode-line-front-space
+                          sml/pos-id-separator
+                          mode-line-client
+                          mode-line-modified
+                          mode-line-remote
+                          mode-line-frame-identification
+                          mode-line-buffer-identification
+                          sml/pos-id-separator
+                          (vc-mode vc-mode)
+                          sml/pre-modes-separator mode-line-modes mode-line-misc-info mode-line-end-spaces)))
 (use-package smart-mode-line
   :init
   (setq sml/theme 'respectful)
+  (setq sml/line-number-format "%3l ")
+  (setq sml/col-number-format "%3c")
+  (setq sml/mule-info nil)
   (setq sml/shorten-directory t)
   (setq sml/shorten-modes t)
   (setq sml/name-width 32)
@@ -873,14 +1046,6 @@ Keep fringes to a minimum:
   (setq sml/extra-filler -1)
   (setq sml/directory-truncation-string "")
   (sml/setup))
-#+end_src
-
-*** Fonts
-#+begin_src elisp
-(set-face-attribute 'default nil
-                    :weight 'regular
-                    :height 120
-                    :width 'normal)
 #+end_src
 
 *** Emojify
@@ -902,6 +1067,7 @@ Prettify some Greek symbols.
 *** SVG Tags
 #+begin_src elisp
 (use-package svg-tag-mode
+  :defer t
   :init
   (setq svg-tag-tags '(("TODO" . ((lambda (tag) (svg-tag-make "TODO" :face 'org-todo :inverse t))))
                        ("CANCELLED" . ((lambda (tag) (svg-tag-make "CANCELLED" :face 'org-cancelled :inverse t))))
@@ -925,8 +1091,6 @@ Prettify some Greek symbols.
 (use-package dashboard
   :commands dashboard-setup-startup-hook
   :init
-  (dashboard-setup-startup-hook)
-  :config
   (setq dashboard-startup-banner [0])
   (setq dashboard-center-content t)
   (setq dashboard-items '((agenda . 5)
@@ -935,11 +1099,12 @@ Prettify some Greek symbols.
                           (bookmarks . 5)
                           (registers . 5)))
   (setq dashboard-bookmarks-item-format "%s")
-  (setq dashboard-footer-icon "")
   (setq dashboard-footer-messages
         '("Purity of the heart is to will one thing."
           "Every good and every perfect gift is from above."
-          "Love shall cover a multitude of sins.")))
+          "Love shall cover a multitude of sins."))
+  (setq dashboard-footer-icon "")
+  (dashboard-setup-startup-hook))
 #+end_src
 
 *** Internationalization
@@ -971,13 +1136,15 @@ Prettify some Greek symbols.
 *** =diff-hl=
 #+begin_src elisp
 (use-package diff-hl
-  :init (global-diff-hl-mode))
+  :defer t
+  :config (global-diff-hl-mode))
 #+end_src
 
 *** Colors
 #+begin_src elisp
-(use-package kurecolor)
+(use-package kurecolor :defer t)
 (use-package ct
+  :defer t
   :straight (ct
              :host github
              :repo "neeasade/ct.el"
@@ -1003,24 +1170,26 @@ For hex colors:
   :diminish rainbow-delimiters-mode)
 #+end_src
 
+** Miscellaneous
+#+begin_src elisp
+(use-package dissociate
+  :straight (:type built-in)
+  :defer t
+  :bind
+  ("s-D" . dissociated-press))
+#+end_src
+
 * Keybindings
 #+begin_src elisp
 (bind-key "s-o" 'other-window)
 (bind-key "C-c c i" 'open-init-org-file)
-(bind-key "C-c c s" 'open-sway-file)
+(bind-key "C-c c s" 'open-sway-config)
 (bind-key "C-c c t" 'open-minerva-theme-file)
-(bind-key "C-c c z" 'open-zshrc-file)
+(bind-key "C-c c z" 'open-zshrc-config)
 (bind-key "C-<backspace>" (lambda () (interactive (kill-line 0))))
 (bind-key "C-c y" 'yank-from-kill-ring)
 (bind-key "C-c a" 'org-agenda)
 (bind-key "C-h F" 'describe-face)
-#+end_src
-
-* Miscellaneous
-#+begin_src elisp
-  (use-package dissociate
-    :bind
-    ("s-D" . dissociated-press))
 #+end_src
 
 * Appendix
