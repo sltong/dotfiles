@@ -17,11 +17,15 @@ generated =init.el= file, but there are certain exceptions identifiable by a
 #+tl;dr: This document provides source code blocks of my =init.el= & commentary.
 
 * Initialization
-** Lexical Binding
-Enable lexical binding:
+** File Heading
+Init file heading. Also enable lexical binding.
 
 #+begin_src elisp
-;;; -*- lexical-binding: t -*-
+;;; init.el --- Emacs init file -*- lexical-binding: t -*-
+;;; Commentary:
+;; My Emacs init file.
+;;
+;; Code:
 #+end_src
 
 ** Startup Configuration
@@ -33,35 +37,58 @@ Enable lexical binding:
     (setq file-name-handler-alist file-name-handler-alist-original)))
 (add-hook 'emacs-startup-hook
           (lambda () (setq gc-cons-threshold (* 16 1024 1024)))) ; set `gc-cons-threshold' to
-(setq load-prefer-newer t)
-(setq inhibit-startup-screen t)
-(setq inhibit-startup-echo-area-message user-login-name)
-(setq inhibit-default-init t)
+;; don't display *Warnings* buffer when native compilation warnings are reported
 (setq native-comp-async-report-warnings-errors 'silent)
-(setq-default cursor-in-non-selected-windows nil)
-(setq-default frame-resize-pixelwise t) ; set pixelwise resizing
-(setq highlight-nonselected-windows nil)
-(setq inhibit-compacting-font-caches t)
+
+;; set initial *scratch* buffer major mode to `fundamental-mode'
 (setq initial-major-mode 'fundamental-mode)
+
+;; make initial *scratch* buffer empty
 (setq initial-scratch-message nil)
-(setq-default global-auto-revert-non-file-buffers t)
-(setq-default kill-do-not-save-duplicates t) ; don't save duplicate entries in kill ring
+
+;; increase kill ring length
 (setq kill-ring-max 500)
-(setq-default auto-revert-interval 3) ; 3 seconds to check autoreverts
-(setq-default echo-keystrokes 0.4)
-(setq-default enable-recursive-minibuffers t)
-(setq-default read-process-output-max (* 2 1024 1024)) ; allow reading 2MB from subprocesses
-(setq-default scroll-preserve-screen-position t)
-(setq-default sentence-end-double-space nil)
-(setq-default indent-tabs-mode nil) ; don't indent tabs automatically
-(setq-default tab-always-indent 'complete) ; indent first, then try to complete at point
-(setq-default tab-width 4)
-(setq-default truncate-lines t) ; never display continuation lines
-(setq-default use-dialog-box nil)
-(setq-default vc-follow-symlinks nil)
-(setq max-lisp-eval-depth 3200)
-(setq-default large-file-warning-threshold (* 1024 1024 100)) ; no warning until file is 100MB
-(setq use-short-answers t) ; make /yes/ or /no/ choices into /y/ or /n/
+
+;; don't save duplicate entries in kill ring
+(setq kill-do-not-save-duplicates t)
+
+;; allow minibuffer commands in the minibuffer
+(setq enable-recursive-minibuffers t)
+
+;; preserve point (i.e. cursor) position when scrolling would normally move it off-screen
+(setq scroll-preserve-screen-position t)
+
+;; make a single space after a period end sentences
+;; relevant for regular expressions (see `sentence-end')
+(setq sentence-end-double-space nil)
+
+;; don't indent tabs automatically
+(setq-default indent-tabs-mode nil)
+
+;; indent first, then try to complete thing at point
+(setq tab-always-indent 'complete)
+
+;; set default tab width
+(setq-default tab-width 2)
+
+;; don't display continuation lines, i.e. don't wrap lines
+(setq-default truncate-lines t)
+
+;; don't ask for confirmation when following symbolic links
+;; but display a warning about it in the minibuffer
+(setq vc-follow-symlinks nil)
+
+;; make /yes/ or /no/ choices into /y/ or /n/
+(setq use-short-answers t)
+
+;; increase chunksize reads from subprocesses to 2MB
+(setq read-process-output-max (* 2 1024 1024))
+
+;; don't use dialog boxes for questions
+(setq use-dialog-box nil)
+
+;; don't report large file warning until file is at least 100MB
+(setq-default large-file-warning-threshold (* 128 1024 1024))
 #+end_src
 
 ** Files and Directories
@@ -115,26 +142,19 @@ Enable lexical binding:
 *** Package Archives
 #+begin_src elisp
 (require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(unless (assoc-default "melpa" package-archives)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t))
+(package-initialize)
 #+end_src
 
 *** =use-package= and =straight= Setup
 #+begin_src elisp
-(setq straight-use-package-by-default t
-      straight-check-for-modifications nil)
-(unless (featurep 'straight)
-  (defvar bootstrap-version)
-  (let ((bootstrap-file (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-        (bootstrap-version 5))
-    (unless (file-exists-p bootstrap-file)
-      (with-current-buffer
-          (url-retrieve-synchronously
-           "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-           'silent 'inhibit-cookies)
-        (goto-char (point-max))
-        (eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage)))
-(straight-use-package 'use-package)
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
+(eval-when-compile
+  (require 'use-package))
+(setq use-package-verbose t)
+(setq use-package-always-ensure t)
 #+end_src
 
 *** Local Packages
@@ -145,9 +165,6 @@ Enable lexical binding:
 
 ** Libraries and Utilities
 #+begin_src elisp
-(use-package async
-  :diminish
-  :config (dired-async-mode 1))
 (use-package multiple-cursors
   :bind
   ("C-S-c C-S-c" . mc/edit-lines))
@@ -157,9 +174,6 @@ Enable lexical binding:
 (use-package goto-line-preview
   :bind
   ("M-g M-g" . goto-line-preview))
-(use-package tiny :defer t)
-(use-package gcmh
-  :straight (gcmh :type git :host gitlab :repo "koral/gcmh"))
 (use-package all-the-icons
   :if (display-graphic-p)
   :defer t
@@ -172,16 +186,14 @@ Enable lexical binding:
 
 *** Startup Metrics
 #+begin_src elisp
-(use-package esup
-  :ensure t
-  ;; To use MELPA Stable use ":pin melpa-stable",
-  :pin melpa)
+(use-package esup)
 #+end_src
 
 ** Org Mode Configuration
 #+begin_src elisp
 (use-package org
-  :straight (:type built-in)
+;; :straight (:type built-in)
+  :ensure nil
   :bind
   (:map org-mode-map ("M-<up>" . org-shiftup)
         ("M-<down>" . org-shiftdown))
@@ -236,8 +248,7 @@ Enable lexical binding:
   (concat user-emacs-directory "auto-save/"))
 (defconst emacs-lockfile-directory
   (concat user-emacs-directory "lock-files/"))
-(setq backup-directory-alist
-      `((".*" . ,emacs-autosave-directory)))
+(setq backup-directory-alist '(("." . "~/.config/emacs/backups")))
 (setq auto-save-file-name-transforms
       `((".*" ,emacs-autosave-directory t)))
 (setq lock-file-name-transforms
@@ -246,10 +257,10 @@ Enable lexical binding:
 
 ** Authorization and Security
 #+begin_src elisp
-(setq-default auth-sources '((:source "~/authinfo.gpg"))
-              epg-gpg-home-directory "~/.gnupg"
-              epg-gpg-program "gpg2"
-              epg-pinentry-mode 'loopback)
+(setq auth-sources '((:source "~/authinfo.gpg"))
+      epg-gpg-home-directory "~/.gnupg"
+      epg-gpg-program "gpg2"
+      epg-pinentry-mode 'loopback)
 #+end_src
 
 ** Environment Variables
@@ -270,7 +281,7 @@ Get environment variables from shell with =exec-path-from-shell=:
 (display-time-mode t) ; always show the time
 (savehist-mode) ; save point at files
 (delete-selection-mode t)
-;;(pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
+(pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
 #+end_src
 
 *** Savehist
@@ -298,7 +309,8 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** =kmacro=
 #+begin_src elisp
 (use-package kmacro
-  :straight (:type built-in)
+:ensure nil
+;; :straight (:type built-in)
   :bind (:map kmacro-keymap ("I" . kmacro-insert-macro))
   :config
   (defalias 'kmacro-insert-macro 'insert-kbd-macro))
@@ -307,6 +319,7 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** Recent Files
 #+begin_src elisp
 (use-package recentf
+  :ensure nil
   :config
   (setq recentf-max-saved-items 300)
   (setq recentf-max-menu-items 10)
@@ -316,14 +329,15 @@ Get environment variables from shell with =exec-path-from-shell=:
 
 *** Diminish and Delight
 #+begin_src elisp
-(use-package diminish)
-(use-package delight)
+(use-package diminish :ensure nil)
+(use-package delight :ensure nil)
 #+end_src
 
 *** Whitespace
 #+begin_src elisp
 (use-package whitespace
-  :straight (:type built-in)
+:ensure nil
+;; :straight (:type built-in)
   :diminish global-whitespace-mode
   :config
   (setq whitespace-line-column nil)
@@ -344,33 +358,38 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** Winner
 #+begin_src elisp
 (use-package winner
+  :ensure nil
   :init (winner-mode))
 #+end_src
 
 *** Ibuffer
 #+begin_src elisp
 (use-package ibuffer
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :bind ("C-x C-b" . ibuffer))
 #+end_src
 
 *** Dired
 #+begin_src elisp
 (use-package dired
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :bind (:map dired-mode-map
               ("M-+" . dired-create-empty-file))
   :config
   (setq dired-listing-switches "-ahl"))
 (use-package dired-x
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :after dired)
 #+end_src
 
 *** Hippie Expand
 #+begin_src elisp
 (use-package hippie-exp
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :bind ("M-/" . hippie-expand))
 #+end_src
 
@@ -382,6 +401,7 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** Tramp
 #+begin_src elisp
 (use-package tramp
+  :ensure nil
   :defer t
   :custom
   (tramp-default-method "ssh")
@@ -392,14 +412,16 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** Flymake
 #+begin_src elisp
 (use-package flymake
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :defer t)
 #+end_src
 
 *** El Doc
 #+begin_src elisp
 (use-package eldoc
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :diminish
   :commands turn-on-eldoc-mode
   :hook ((emacs-lisp-mode . turn-on-eldoc-mode)
@@ -415,7 +437,8 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** EWW
 #+begin_src elisp
 (use-package eww
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :config
   (setq shr-use-fonts nil)
   (setq shr-use-colors nil))
@@ -424,7 +447,8 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** URL
 #+begin_src elisp
 (use-package url
-:straight (:type built-in))
+  :ensure nil)
+;; :straight (:type built-in))
 #+end_src
 
 ** Completions
@@ -450,7 +474,7 @@ Get environment variables from shell with =exec-path-from-shell=:
     :bind (("C-<tab>" . dabbrev-expand)
            (:map minibuffer-local-map ("C-<tab>" . dabbrev-expand)))
     :custom
-(dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
+    (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\|webp\\)\\'")))
 #+end_src
 
 *** Consult
@@ -574,18 +598,6 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** Vertico
 #+begin_src elisp
 (use-package vertico
-  :straight (vertico :files (:defaults "extensions/*")
-                     :includes (vertico-indexed
-                                vertico-flat
-                                vertico-grid
-                                vertico-mouse
-                                vertico-quick
-                                vertico-buffer
-                                vertico-repeat
-                                vertico-reverse
-                                vertico-directory
-                                vertico-multiform
-                                vertico-unobtrusive))
   :commands vertico-mode
   :bind
   (:map vertico-map
@@ -600,7 +612,7 @@ Get environment variables from shell with =exec-path-from-shell=:
 ***** Vertico Directory
 #+begin_src elisp
 (use-package vertico-directory
-  :straight nil
+  :ensure nil
   :after vertico
   :bind (:map vertico-map
               ("RET" . vertico-directory-enter)
@@ -612,7 +624,7 @@ Get environment variables from shell with =exec-path-from-shell=:
 ***** Vertico Mouse
 #+begin_src elisp
  (use-package vertico-mouse
-   :straight nil
+   :ensure nil
    :after vertico)
 #+end_src
 
@@ -764,6 +776,7 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** =multi-vterm=
 #+begin_src elisp
 (use-package multi-vterm
+  :commands multi-vterm
   :init
   (add-hook 'vterm-mode-hook (lambda () (hl-line-mode -1)))
   :bind
@@ -931,7 +944,8 @@ Get environment variables from shell with =exec-path-from-shell=:
 #+begin_src elisp
 (use-package python
   :defer t
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :delight (python-mode "py")
   :config
   (setq python-indent-guess-indent-offset nil))
@@ -988,7 +1002,8 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** Org Indent
 #+begin_src elisp
 (use-package org-indent
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :defer t
   :config
   (add-hook 'org-indent-mode-hook (lambda () (diminish 'org-indent-mode))))
@@ -997,7 +1012,7 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** Org CalDAV
 #+begin_src elisp
 (use-package org-caldav
-  :straight (org-caldav :type git :host github :fork "jackkamm/org-caldav")
+;; :straight (org-caldav :type git :host github :fork "jackkamm/org-caldav")
   :defer t
   :config
   (setq org-caldav-url "https://next.dao/remote.php/dav/calendars/lao")
@@ -1016,8 +1031,8 @@ Get environment variables from shell with =exec-path-from-shell=:
 
 *** Org Export Markdown
 #+begin_src elisp
-(use-package ox-md
-  :straight (:type built-in))
+(use-package ox-md :ensure nil)
+;; :straight (:type built-in))
 #+end_src
 
 *** =ox-hugo=
@@ -1066,6 +1081,11 @@ Keep fringes to a minimum:
 (setq blink-cursor-mode nil)
 #+end_src
 
+*** Theme
+#+begin_src elisp
+(load-theme 'minerva t)
+#+end_src
+
 *** Mode Line
 #+begin_src elisp
 (setq column-number-mode t
@@ -1080,9 +1100,11 @@ Keep fringes to a minimum:
                           mode-line-buffer-identification
                           sml/pos-id-separator
                           (vc-mode vc-mode)
-                          sml/pre-modes-separator mode-line-modes mode-line-misc-info mode-line-end-spaces)))
+                          sml/pre-modes-separator
+                          mode-line-modes mode-line-misc-info mode-line-end-spaces)))
 (use-package smart-mode-line
   :init
+  (setq sml/theme nil)
   (setq sml/line-number-format "%3l ")
   (setq sml/col-number-format "%3c")
   (setq sml/mule-info nil)
@@ -1126,7 +1148,7 @@ Prettify some Greek symbols.
 (use-package dashboard
   :commands dashboard-setup-startup-hook
   :init
-  (setq dashboard-startup-banner [0])
+  (setq dashboard-startup-banner 'logo)
   (setq dashboard-center-content t)
   (setq dashboard-items '((agenda . 5)
                           (projects . 5)
@@ -1138,7 +1160,6 @@ Prettify some Greek symbols.
         '("Purity of the heart is to will one thing."
           "Every good and every perfect gift is from above."
           "Love shall cover a multitude of sins."))
-  (setq dashboard-footer-icon "")
   (dashboard-setup-startup-hook))
 #+end_src
 
@@ -1179,11 +1200,11 @@ Prettify some Greek symbols.
 #+begin_src elisp
 (use-package kurecolor :defer t)
 (use-package ct
-  :defer t
-  :straight (ct
-             :host github
-             :repo "neeasade/ct.el"
-             :branch "master"))
+  :defer t)
+;; :straight (ct
+;;            :host github
+;;            :repo "neeasade/ct.el"
+;;            :branch "master"))
 #+end_src
 
 *** Rainbow Mode
@@ -1208,7 +1229,8 @@ For hex colors:
 ** Miscellaneous
 #+begin_src elisp
 (use-package dissociate
-  :straight (:type built-in)
+  :ensure nil
+;; :straight (:type built-in)
   :defer t
   :bind
   ("s-D" . dissociated-press))
