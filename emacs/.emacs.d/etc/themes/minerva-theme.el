@@ -105,9 +105,9 @@
    `(highlight-indentation-face ((,class (:foreground ,fg-muted))))
 
 ;;; mode line
-   `(mode-line              ((,class :foreground ,fg-main :background ,theme :box (:line-width 4 :color ,theme))))
-   `(mode-line-active       ((,class :foreground ,fg-main :background ,purple )))
-   `(mode-line-inactive     ((,class :foreground ,fg-muted :background ,bg-alt :box (:line-width 4 :color ,bg-alt))))
+   `(mode-line              ((,class :foreground ,fg-main :background ,theme)))
+   `(mode-line-active       ((,class :foreground ,fg-main :background ,theme)))
+   `(mode-line-inactive     ((,class :foreground ,fg-muted :background ,bg-alt)))
    `(mode-line-buffer-id    ((,class :foreground ,fg-main)))
    `(mode-line-highlight    ((,class :foreground ,highlight)))
    `(mode-line-emphasis     ((,class :foreground ,light-blue)))
