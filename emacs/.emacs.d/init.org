@@ -165,9 +165,6 @@ Init file heading. Also enable lexical binding.
 
 ** Libraries and Utilities
 #+begin_src elisp
-(use-package multiple-cursors
-  :bind
-  ("C-S-c C-S-c" . mc/edit-lines))
 (use-package restart-emacs
   :bind
   ("C-c r" . restart-emacs))
@@ -192,7 +189,6 @@ Init file heading. Also enable lexical binding.
 ** Org Mode Configuration
 #+begin_src elisp
 (use-package org
-;; :straight (:type built-in)
   :ensure nil
   :bind
   (:map org-mode-map ("M-<up>" . org-shiftup)
@@ -249,10 +245,6 @@ Init file heading. Also enable lexical binding.
 (defconst emacs-lockfile-directory
   (concat user-emacs-directory "lock-files/"))
 (setq backup-directory-alist '(("." . "~/.config/emacs/backups")))
-(setq auto-save-file-name-transforms
-      `((".*" ,emacs-autosave-directory t)))
-(setq lock-file-name-transforms
-      `((".*" ,emacs-lockfile-directory t)))
 #+end_src
 
 ** Authorization and Security
@@ -276,11 +268,12 @@ Get environment variables from shell with =exec-path-from-shell=:
 
 ** Initial Modes
 #+begin_src elisp
-(global-auto-revert-mode t) ; always revert buffers when a file changes
-(global-so-long-mode t) ; avoid performance issues with files with long names
-(display-time-mode t) ; always show the time
+(save-place-mode)
+(global-auto-revert-mode) ; always revert buffers when a file changes
+(global-so-long-mode) ; avoid performance issues with files with long names
+(display-time-mode) ; always show the time
 (savehist-mode) ; save point at files
-(delete-selection-mode t)
+(delete-selection-mode) ; replace selection when entering new text
 (pixel-scroll-precision-mode) ; smooth pixel by pixel scrolling
 #+end_src
 
@@ -413,7 +406,6 @@ Get environment variables from shell with =exec-path-from-shell=:
 #+begin_src elisp
 (use-package flymake
   :ensure nil
-;; :straight (:type built-in)
   :defer t)
 #+end_src
 
@@ -691,6 +683,7 @@ Get environment variables from shell with =exec-path-from-shell=:
 *** Emacs Completion Configuration
 #+begin_src elisp
 (use-package emacs
+  :ensure nil
   :init
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
@@ -704,14 +697,61 @@ Get environment variables from shell with =exec-path-from-shell=:
   (setq tab-always-indent 'complete))
 #+end_src
 
-** Search, Pattern Matching, and Regular Expressions
+** Navigation
+#+begin_src elisp
+(use-package dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-quick-access-entries ; It's a custom option, `setq' won't work
+   '(("h" "~/"                          "Home")
+     ("d" "~/dump/"                     "Dump")
+     ("m" "/mnt/"                       "Drives")))
+  :config
+  ;; (dirvish-peek-mode) ; Preview files in minibuffer
+  ;; (dirvish-side-follow-mode) ; similar to `treemacs-follow-mode'
+  (setq dirvish-mode-line-format
+        '(:left (sort symlink) :right (omit yank index)))
+  (setq dirvish-attributes
+        '(all-the-icons file-time file-size collapse subtree-state vc-state git-msg))
+  (setq delete-by-moving-to-trash t)
+  (setq dired-listing-switches
+        "-l --almost-all --human-readable --group-directories-first --no-group")
+  :bind ; Bind `dirvish|dirvish-side|dirvish-dwim' as you see fit
+  (("C-c f" . dirvish-fd)
+   :map dirvish-mode-map ; Dirvish inherits `dired-mode-map'
+   ("a"   . dirvish-quick-access)
+   ("f"   . dirvish-file-info-menu)
+   ("y"   . dirvish-yank-menu)
+   ("N"   . dirvish-narrow)
+   ("^"   . dirvish-history-last)
+   ("h"   . dirvish-history-jump) ; remapped `describe-mode'
+   ("s"   . dirvish-quicksort)    ; remapped `dired-sort-toggle-or-edit'
+   ("v"   . dirvish-vc-menu)      ; remapped `dired-view-file'
+   ("TAB" . dirvish-subtree-toggle)
+   ("M-f" . dirvish-history-go-forward)
+   ("M-b" . dirvish-history-go-backward)
+   ("M-l" . dirvish-ls-switches-menu)
+   ("M-m" . dirvish-mark-menu)
+   ("M-t" . dirvish-layout-toggle)
+   ("M-s" . dirvish-setup-menu)
+   ("M-e" . dirvish-emerge-menu)
+   ("M-j" . dirvish-fd-jump)))
+#+end_src
+
+** Search, Selection, Pattern Matching, and Regular Expressions
+*** =expand-region=
+#+begin_src elisp
+(use-package expand-region
+  :bind ("C-=" . er/expand-region))
+#+end_src
+
 *** =anzu=
 #+begin_src elisp
 (use-package anzu
   :diminish
   :config
   (global-anzu-mode +1))
-
 #+end_src
 
 *** =visual-regexp=
@@ -732,7 +772,6 @@ Get environment variables from shell with =exec-path-from-shell=:
 (use-package rg :defer t)
 #+end_src
 
-** Selection
 *** =multiple-cursors=
 #+begin_src elisp
 (use-package multiple-cursors
@@ -777,6 +816,8 @@ Get environment variables from shell with =exec-path-from-shell=:
 #+begin_src elisp
 (use-package multi-vterm
   :commands multi-vterm
+  :defines multi-vterm-program
+  :functions multi-vterm
   :init
   (add-hook 'vterm-mode-hook (lambda () (hl-line-mode -1)))
   :bind
@@ -854,6 +895,12 @@ Get environment variables from shell with =exec-path-from-shell=:
 #+end_src
 
 ** Software Development
+*** Tree Sitter
+#+begin_src elisp
+(use-package tree-sitter)
+(use-package tree-sitter-langs)
+(global-tree-sitter-mode)
+#+end_src
 *** EditorConfig
 #+begin_src elisp
 (use-package editorconfig
@@ -951,22 +998,6 @@ Get environment variables from shell with =exec-path-from-shell=:
   (setq python-indent-guess-indent-offset nil))
 #+end_src
 
-**** Docstring Mode
-#+begin_src elisp
-(use-package python-docstring
-  :defer t
-  :config
-  (setq elpy-modules
-        (remove 'elpy-module-sane-defaults elpy-modules)))
-#+end_src
-**** Elpy
-#+begin_src elisp
-(use-package elpy
-  :defer t
-  :init
-  (elpy-enable))
-#+end_src
-
 **** Black
 #+begin_src elisp
 (use-package python-black
@@ -1029,20 +1060,6 @@ Get environment variables from shell with =exec-path-from-shell=:
   (setq org-icalendar-use-scheduled '(todo-start event-if-todo event-if-not-todo)))
 #+end_src
 
-*** Org Export Markdown
-#+begin_src elisp
-(use-package ox-md :ensure nil)
-;; :straight (:type built-in))
-#+end_src
-
-*** =ox-hugo=
-#+begin_src elisp
-(use-package ox-hugo
-  :after ox
-  :config
-  (setq org-hugo-default-section-directory "/"))
-#+end_src
-
 ** Aesthetics
 For making Emacs look /good/.
 
@@ -1079,6 +1096,7 @@ Keep fringes to a minimum:
 #+begin_src elisp
 (setq cursor-type 'box)
 (setq blink-cursor-mode nil)
+(setq-default cursor-in-non-selected-windows nil)
 #+end_src
 
 *** Theme
@@ -1198,13 +1216,10 @@ Prettify some Greek symbols.
 
 *** Colors
 #+begin_src elisp
-(use-package kurecolor :defer t)
+(use-package kurecolor
+  :defer t)
 (use-package ct
   :defer t)
-;; :straight (ct
-;;            :host github
-;;            :repo "neeasade/ct.el"
-;;            :branch "master"))
 #+end_src
 
 *** Rainbow Mode
