@@ -1,8 +1,5 @@
 ;; early-init.el --- Early Initialization File -*- lexical-binding: t; -*-
 
-;; (setq package-enable-at-startup nil)
-(setq package-quickstart t)
-
 (when (featurep 'native-compile)
   (setq native-comp-async-report-warnings-errors 'silent)
   (startup-redirect-eln-cache "var/eln-cache/"))
@@ -27,9 +24,10 @@
 (add-to-list 'default-frame-alist '(menu-bar-lines . 0))
 (add-to-list 'default-frame-alist '(tool-bar-lines . 0))
 (add-to-list 'default-frame-alist '(vertical-scroll-bars))
+
 (add-to-list 'initial-frame-alist '(fullscreen . maximized))
-;; (add-to-list 'default-frame-alist
-;;              '(font . "JetBrains Mono NL-12"))
+
+(add-to-list 'default-frame-alist (height . 120))
 
 (setq inhibit-startup-message t)
-(customize-set-variable 'initial-major-mode 'fundamental-mode)
+(setq initial-major-mode 'fundamental-mode)
