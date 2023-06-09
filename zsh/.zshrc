@@ -23,16 +23,29 @@ HIST_STAMPS="yyyy-mm-dd"
 
 plugins=(
     git
-    poetry
     safe-paste
+    asdf
 )
 
 source $ZSH/oh-my-zsh.sh
 
+# gnome terminal previous directory inheritance in new tabs
+source /etc/profile.d/vte-2.91.sh
+
+# QT styling
+QT_QPA_PLATFORM=wayland
+QT_QPA_PLATFORMTHEME=gtk2
+
 # aliases
 # alias zshconfig="emacs ~/.zshrc"
 # alias ohmyzsh="emacs ~/.oh-my-zsh"
+alias uses="equery uses"
+alias lsl="ls"
 
+# Python virtual environments
+export PROJECT_HOME="~/projects"
+
+# vterm
 # Some of the most useful features in emacs-libvterm require shell-side
 # configurations. The main goal of these additional functions is to enable the
 # shell to send information to `vterm` via properly escaped sequences. A
@@ -87,3 +100,15 @@ vterm_prompt_end() {
 }
 setopt PROMPT_SUBST
 PROMPT=$PROMPT'%{$(vterm_prompt_end)%}'
+
+autoload -U +X bashcompinit && bashcompinit
+complete -o nospace -C /usr/bin/terraform terraform
+
+source /usr/share/fzf/key-bindings.zsh
+
+PATH="/home/lao/Android/Sdk/platform-tools:$PATH"
+PATH="/home/lao/.emacs.d/bin:$PATH"
+PATH="/var/tmp/portage/sys-apps/fd-8.2.1/image/usr/bin:$PATH"
+PATH="$(ruby -r rubygems -e 'puts Gem.user_dir')/bin:$PATH"
+
+export PATH
