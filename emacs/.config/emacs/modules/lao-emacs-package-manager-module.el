@@ -1,20 +1,21 @@
 ;;; lao-emacs-package-manager-module.el --- Emacs package management -*- lexical-binding: t; -*-
 
+(require 'package)
+(require 'use-package)
+
 ;; configure package archives
-(setq package-archives
-      '(("elpa" . "https://elpa.gnu.org/packages/")
-        ("elpa-devel" . "https://elpa.gnu.org/devel/")
-        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-        ("melpa" . "https://melpa.org/packages/")))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives '("elpa-devel" . "https://elpa.gnu.org/devel/"))
 
 (setq package-archive-priorities
       '(("elpa" . 3)
         ("melpa" . 2)
-        ("nongnu" . 1))
-)
+        ("nongnu" . 1)
+        ("elpa-devel" . 0)))
 
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
+(setq package-quickstart t)
 
 ;; (defun use-package-normalize/:built-in (name-symbol keyword args)
 ;;   (use-package-only-one (symbol-name keyword) args
