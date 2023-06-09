@@ -6,3 +6,4 @@
 !.config/emacs/early-init.el
 !.config/emacs/modules/*
 *.log
+custom.el
