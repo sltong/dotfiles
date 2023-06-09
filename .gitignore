@@ -1,9 +1,9 @@
-.config/emacs/**/*
-!.config/emacs/etc/
-!.config/emacs/var/
-!.config/emacs/init.org
-!.config/emacs/init.el
-!.config/emacs/early-init.el
-!.config/emacs/modules/*
+emacs/**/*
+!emacs/**/etc/
+!emacs/**/var/
+!emacs/**/init.org
+!emacs/**/init.el
+!emacs/**/early-init.el
+!emacs/**/modules/*
 *.log
 custom.el
