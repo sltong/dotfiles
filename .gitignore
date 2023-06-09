@@ -1,4 +1,8 @@
-emacs/.emacs.d/*
-!emacs/.emacs.d/etc/
-!emacs/.emacs.d/early-init.el
-!emacs/.emacs.d/init.org
+.config/emacs/**/*
+!.config/emacs/etc/
+!.config/emacs/var/
+!.config/emacs/init.org
+!.config/emacs/init.el
+!.config/emacs/early-init.el
+!.config/emacs/modules/*
+**/*.log
